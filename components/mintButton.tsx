@@ -11,12 +11,8 @@ import {
   Umi,
   createBigInt,
   generateSigner,
-  none,
   publicKey,
   signAllTransactions,
-  sol,
-  some,
-  transactionBuilder,
 } from "@metaplex-foundation/umi";
 import {
   DigitalAsset,
@@ -32,7 +28,6 @@ import {
   chooseGuardToUse,
   routeBuilder,
   mintArgsBuilder,
-  GuardButtonList,
   buildTx,
   getRequiredCU,
 } from "../utils/mintHelper";
@@ -41,7 +36,7 @@ import { verifyTx } from "@/utils/verifyTx";
 import { base58 } from "@metaplex-foundation/umi/serializers";
 import { useToast } from "@/contexts/ToastContext";
 import { Timer } from './Timer';
-import { AddressLookupTableInput } from '@metaplex-foundation/mpl-toolbox';
+import { AddressLookupTable } from '@metaplex-foundation/mpl-toolbox';
 
 const updateLoadingText = (
   loadingText: string | undefined,
@@ -62,6 +57,7 @@ const updateLoadingText = (
 const fetchNft = async (
   umi: Umi,
   nftAdress: PublicKey,
+  toast: ReturnType<typeof useToast>
 ) => {
   let digitalAsset: DigitalAsset | undefined;
   let jsonMetadata: JsonMetadata | undefined;
@@ -116,7 +112,6 @@ const mintClick = async (
 
   if (process.env.NEXT_PUBLIC_BUYMARKBEER  === "false") {
     buyBeer = false;
-    console.log("The Creator does not want to pay for MarkSackerbergs beer 😒");
   }
 
   try {
@@ -148,20 +143,16 @@ const mintClick = async (
         .catch((error) => {
           toast.showToast(
             "Allow List TX failed!",
-            "error",
-            900,
-            true
+            "error"
           );
           return { status: "rejected", reason: error, value: new Uint8Array };
-
         });
         if (sig.status === "fulfilled")
           await verifyTx(umi, [sig.value], latestBlockhash, "finalized");
-
     }
 
     // fetch LUT
-    let tables: AddressLookupTableInput[] = [];
+    let tables: AddressLookupTable[] = [];
     const lut = process.env.NEXT_PUBLIC_LUT;
     if (lut) {
       const lutPubKey = publicKey(lut);
@@ -170,9 +161,7 @@ const mintClick = async (
     } else {
       toast.showToast(
         "The developer should really set a lookup table!",
-        "warning",
-        900,
-        true
+        "warning"
       );
     }
 
@@ -265,9 +254,7 @@ const mintClick = async (
 
     toast.showToast(
       `${signedTransactions.length} Transaction(s) sent!`,
-      "success",
-      3000,
-      true
+      "success"
     );
     
     const successfulMints = await verifyTx(umi, signatures, latestBlockhash, "finalized");
@@ -281,7 +268,7 @@ const mintClick = async (
 
     // Filter out successful mints and map to fetch promises
     const fetchNftPromises = successfulMints.map((mintResult) =>
-      fetchNft(umi, mintResult).then((nftData) => ({
+      fetchNft(umi, mintResult, toast).then((nftData) => ({
         mint: mintResult,
         nftData,
       }))
@@ -311,9 +298,7 @@ const mintClick = async (
     console.error(`minting failed because of ${e}`);
     toast.showToast(
       "Your mint failed!",
-      "error",
-      900,
-      true
+      "error"
     );
   } finally {
     //find the guard by guardToUse.label and set minting to true
@@ -378,8 +363,47 @@ export function ButtonList({
   // Check if wallet is connected by checking if the public key exists
   const isWalletConnected = umi.identity.publicKey !== publicKey("11111111111111111111111111111111");
 
-  const handleNumberInputChange = (label: string, value: number) => {
-    setNumberInputValues((prev) => ({ ...prev, [label]: value }));
+  const handleNumberInputChange = (label: string, value: string) => {
+    let newValue: number;
+    
+    // Handle empty input
+    if (value === '') {
+      setNumberInputValues((prev) => ({ ...prev, [label]: 1 }));
+      return;
+    }
+
+    // Parse the input value
+    newValue = parseInt(value);
+
+    // Handle invalid numbers
+    if (isNaN(newValue)) {
+      return;
+    }
+
+    // Get max amount from the guard
+    const guard = guardList.find(g => g.label === label);
+    const maxAmount = guard?.maxAmount || 1;
+
+    // Ensure the value is within bounds
+    newValue = Math.max(1, Math.min(newValue, maxAmount));
+    
+    setNumberInputValues((prev) => ({ ...prev, [label]: newValue }));
+  };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, label: string) => {
+    const currentValue = numberInputValues[label] || 1;
+    const guard = guardList.find(g => g.label === label);
+    const maxAmount = guard?.maxAmount || 1;
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const newValue = Math.min(currentValue + 1, maxAmount);
+      handleNumberInputChange(label, newValue.toString());
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const newValue = Math.max(1, currentValue - 1);
+      handleNumberInputChange(label, newValue.toString());
+    }
   };
 
   let filteredGuardlist = guardList.filter(
@@ -406,7 +430,7 @@ export function ButtonList({
             <h3 className="text-lg font-bold text-primary">
               {text ? text.header : "header missing in settings.tsx"}
             </h3>
-            {buttonGuard.endTime > createBigInt(0) &&
+            {typeof buttonGuard.endTime === 'bigint' && buttonGuard.endTime > createBigInt(0) &&
               buttonGuard.endTime - solanaTime > createBigInt(0) && (
                 <div className="flex items-center bg-accent/50 rounded-full px-4 py-1">
                   <span className="text-sm mr-2 text-white">Ending in: </span>
@@ -438,9 +462,10 @@ export function ButtonList({
                     <input
                       type="number"
                       value={numberInputValues[buttonGuard.label] || 1}
+                      onChange={(e) => handleNumberInputChange(buttonGuard.label, e.target.value)}
+                      onKeyDown={(e) => handleInputKeyDown(e, buttonGuard.label)}
                       min={1}
-                      max={buttonGuard.maxAmount < 1 ? 1 : buttonGuard.maxAmount}
-                      onChange={(e) => handleNumberInputChange(buttonGuard.label, Number(e.target.value))}
+                      max={buttonGuard.maxAmount || 1}
                       className="w-20 px-3 py-2 text-sm bg-background border border-accent/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                       disabled={!buttonGuard.allowed}
                     />

@@ -124,7 +124,7 @@ export const InitializeModal = ({ umi, candyMachine, candyGuard }: Props) => {
 
   const roots = new Map<string, string>();
   allowLists.forEach((value, key) => {
-    const merkleRoot = getMerkleRoot(value).toString('hex');
+    const merkleRoot = Buffer.from(getMerkleRoot(value)).toString('hex');
     roots.set(key, merkleRoot);
   });
 
@@ -132,8 +132,9 @@ export const InitializeModal = ({ umi, candyMachine, candyGuard }: Props) => {
     try {
       await createLut(umi, candyMachine, candyGuard, recentSlot)();
       toast.showToast("LUT created successfully!", "success");
-    } catch (error) {
-      toast.showToast("Failed to create LUT", "error", error.message);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Unknown error occurred";
+      toast.showToast("Failed to create LUT", "error", errorMessage);
     }
   };
 
@@ -141,8 +142,9 @@ export const InitializeModal = ({ umi, candyMachine, candyGuard }: Props) => {
     try {
       await initializeGuards(umi, candyMachine, candyGuard)();
       toast.showToast("Guards initialized successfully!", "success");
-    } catch (error) {
-      toast.showToast("Failed to initialize guards", "error", error.message);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Unknown error occurred";
+      toast.showToast("Failed to initialize guards", "error", errorMessage);
     }
   };
 
@@ -150,8 +152,9 @@ export const InitializeModal = ({ umi, candyMachine, candyGuard }: Props) => {
     try {
       await buyABeer(umi, amount)();
       toast.showToast("Thanks for the beer! 🍻", "success");
-    } catch (error) {
-      toast.showToast("Beer purchase failed", "error", error.message);
+    } catch (error: any) {
+      const errorMessage = error?.message || "Unknown error occurred";
+      toast.showToast("Beer purchase failed", "error", errorMessage);
     }
   };
 
