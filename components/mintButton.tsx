@@ -375,6 +375,9 @@ export function ButtonList({
     return <></>;
   }
 
+  // Check if wallet is connected by checking if the public key exists
+  const isWalletConnected = umi.identity.publicKey !== publicKey("11111111111111111111111111111111");
+
   const handleNumberInputChange = (label: string, value: number) => {
     setNumberInputValues((prev) => ({ ...prev, [label]: value }));
   };
@@ -421,53 +424,63 @@ export function ButtonList({
           </p>
 
           <div className="flex items-center justify-between mt-auto">
-            {process.env.NEXT_PUBLIC_MULTIMINT && buttonGuard.allowed && (
-              <div className="flex items-center gap-2">
-                <label className="text-white/70 text-sm">Quantity:</label>
-                <input
-                  type="number"
-                  value={numberInputValues[buttonGuard.label] || 1}
-                  min={1}
-                  max={buttonGuard.maxAmount < 1 ? 1 : buttonGuard.maxAmount}
-                  onChange={(e) => handleNumberInputChange(buttonGuard.label, Number(e.target.value))}
-                  className="w-20 px-3 py-2 text-sm bg-background border border-accent/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  disabled={!buttonGuard.allowed}
-                />
+            {!isWalletConnected ? (
+              <div className="w-full">
+                <p className="text-white/90 text-base">
+                  Connect your wallet to proceed with minting.
+                </p>
               </div>
+            ) : (
+              <>
+                {process.env.NEXT_PUBLIC_MULTIMINT && buttonGuard.allowed && (
+                  <div className="flex items-center gap-2">
+                    <label className="text-white/70 text-sm">Quantity:</label>
+                    <input
+                      type="number"
+                      value={numberInputValues[buttonGuard.label] || 1}
+                      min={1}
+                      max={buttonGuard.maxAmount < 1 ? 1 : buttonGuard.maxAmount}
+                      onChange={(e) => handleNumberInputChange(buttonGuard.label, Number(e.target.value))}
+                      className="w-20 px-3 py-2 text-sm bg-background border border-accent/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      disabled={!buttonGuard.allowed}
+                    />
+                  </div>
+                )}
+                
+                <button
+                  onClick={() => mintClick(
+                    umi,
+                    buttonGuard,
+                    candyMachine,
+                    candyGuard,
+                    ownedTokens,
+                    numberInputValues[buttonGuard.label] || 1,
+                    mintsCreated,
+                    setMintsCreated,
+                    guardList,
+                    setGuardList,
+                    onOpen,
+                    setCheckEligibility,
+                    toast
+                  )}
+                  disabled={!buttonGuard.allowed}
+                  className={`px-6 py-2.5 text-base font-semibold rounded-lg transition-all duration-200 transform hover:scale-105
+                    ${buttonGuard.allowed 
+                      ? 'bg-primary hover:bg-accent text-background shadow-lg hover:shadow-xl' 
+                      : 'bg-disabled/50 text-white/50 cursor-not-allowed'}`}
+                  title={buttonGuard.reason}
+                >
+                  {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
+                    <div className="flex items-center gap-2">
+                      <span>Minting...</span>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent"></div>
+                    </div>
+                  ) : (
+                    text ? text.buttonLabel : "buttonLabel missing in settings.tsx"
+                  )}
+                </button>
+              </>
             )}
-            
-            <button
-              onClick={() => mintClick(
-                umi,
-                buttonGuard,
-                candyMachine,
-                candyGuard,
-                ownedTokens,
-                numberInputValues[buttonGuard.label] || 1,
-                mintsCreated,
-                setMintsCreated,
-                guardList,
-                setGuardList,
-                onOpen,
-                setCheckEligibility,
-                toast
-              )}
-              disabled={!buttonGuard.allowed}
-              className={`px-6 py-2.5 text-base font-semibold rounded-lg transition-all duration-200 transform hover:scale-105
-                ${buttonGuard.allowed 
-                  ? 'bg-primary hover:bg-accent text-background shadow-lg hover:shadow-xl' 
-                  : 'bg-disabled/50 text-white/50 cursor-not-allowed'}`}
-              title={buttonGuard.reason}
-            >
-              {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
-                <div className="flex items-center gap-2">
-                  <span>Minting...</span>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent"></div>
-                </div>
-              ) : (
-                text ? text.buttonLabel : "buttonLabel missing in settings.tsx"
-              )}
-            </button>
           </div>
         </div>
       </div>
