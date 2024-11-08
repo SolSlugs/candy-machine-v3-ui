@@ -20,15 +20,16 @@ import {
 import { DigitalAssetWithToken } from "@metaplex-foundation/mpl-token-metadata";
 import { createStandaloneToast } from "@chakra-ui/react";
 
-export interface GuardReturn {
+export type GuardReturn = {
   label: string;
   allowed: boolean;
+  maxAmount: number;
+  reason?: string;
   minting?: boolean;
   loadingText?: string;
-  reason?: string;
-  maxAmount: number;
-  mintAmount?: number;
-}
+  startTime?: bigint;
+  endTime?: bigint;
+};
 
 export const addressGateChecker = (wallet: PublicKey, address: PublicKey) => {
   if (wallet != address) {

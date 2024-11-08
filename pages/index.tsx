@@ -133,19 +133,16 @@ export default function Home() {
   const [checkEligibility, setCheckEligibility] = useState<boolean>(true);
 
 
-  if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
-    console.error("No candy machine in .env!")
-    if (!toast.isActive('no-cm')) {
-      toast({
-        id: 'no-cm',
-        title: 'No candy machine in .env!',
-        description: "Add your candy machine address to the .env file!",
-        status: 'error',
-        duration: 999999,
-        isClosable: true,
-      })
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
+      toast.showToast(
+        "No candy machine in .env!",
+        "error",
+        "Add your candy machine address to the .env file!"
+      );
     }
-  }
+  }, [toast]);
+
   const candyMachineId: PublicKey = useMemo(() => {
     if (process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
       return publicKey(process.env.NEXT_PUBLIC_CANDY_MACHINE_ID);
@@ -199,55 +196,43 @@ export default function Home() {
 
   const PageContent = () => {
     return (
-      <>
-        <style jsx global>
-          {`
-      body {
-          background: #2d3748; 
-       }
-   `}
-        </style>
-        <Card>
-          <CardHeader>
-            <Flex minWidth='max-content' alignItems='center' gap='2'>
-              <Box>
-                <Heading size='md'>{headerText}</Heading>
-              </Box>
-              {loading ? (<></>) : (
-                <Flex justifyContent="flex-end" marginLeft="auto">
-                  <Box background={"teal.100"} borderRadius={"5px"} minWidth={"50px"} minHeight={"50px"} p={2} >
-                    <VStack >
-                      <Text fontSize={"sm"}>Available NFTs:</Text>
-                      <Text fontWeight={"semibold"}>{Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/{Number(candyMachine?.data.itemsAvailable)}</Text>
-                    </VStack>
-                  </Box>
-                </Flex>
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-widget rounded-lg shadow-xl">
+          {/* Header */}
+          <div className="p-6 border-b border-accent">
+            <div className="flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-primary">Sol Slugs Gen 4 Mint</h1>
+              {!loading && (
+                <div className="bg-accent rounded p-3">
+                  <div className="flex flex-col items-center">
+                    <span className="text-sm text-white">Available NFTs:</span>
+                    <span className="font-semibold text-primary">
+                      {Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/
+                      {Number(candyMachine?.data.itemsAvailable)}
+                    </span>
+                  </div>
+                </div>
               )}
-            </Flex>
-          </CardHeader>
+            </div>
+          </div>
 
-          <CardBody>
-            <Center>
-              <Box
-                rounded={'lg'}
-                mt={-12}
-                pos={'relative'}>
-                <Image
-                  rounded={'lg'}
-                  height={230}
-                  objectFit={'cover'}
-                  alt={"project Image"}
-                  src={image}
-                />
-              </Box>
-            </Center>
-            <Stack divider={<StackDivider />} spacing='8'>
+          {/* Logo Section - adjusted positioning */}
+          <div className="flex justify-center -mb-12">
+            <img 
+              src="/solslugs.png" 
+              alt="Sol Slugs Logo" 
+              className="h-24 w-24 transform -translate-y-12"
+            />
+          </div>
+
+          {/* Body - reduced top padding */}
+          <div className="pt-0 px-6 pb-6">
+            <div>
               {loading ? (
-                <div>
-                  <Divider my="10px" />
-                  <Skeleton height="30px" my="10px" />
-                  <Skeleton height="30px" my="10px" />
-                  <Skeleton height="30px" my="10px" />
+                <div className="space-y-4">
+                  <div className="h-8 bg-widget animate-pulse rounded"></div>
+                  <div className="h-8 bg-widget animate-pulse rounded"></div>
+                  <div className="h-8 bg-widget animate-pulse rounded"></div>
                 </div>
               ) : (
                 <ButtonList
@@ -263,53 +248,57 @@ export default function Home() {
                   setCheckEligibility={setCheckEligibility}
                 />
               )}
-            </Stack>
-          </CardBody>
-        </Card >
-        {umi.identity.publicKey === candyMachine?.authority ? (
-          <>
-            <Center>
-              <Button backgroundColor={"red.200"} marginTop={"10"} onClick={onInitializerOpen}>Initialize Everything!</Button>
-            </Center>
-            <Modal isOpen={isInitializerOpen} onClose={onInitializerClose}>
-              <ModalOverlay />
-              <ModalContent maxW="600px">
-                <ModalHeader>Initializer</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                  < InitializeModal umi={umi} candyMachine={candyMachine} candyGuard={candyGuard} />
-                </ModalBody>
-              </ModalContent>
-            </Modal>
-
-          </>)
-          :
-          (<></>)
-        }
-
-        <Modal isOpen={isShowNftOpen} onClose={onShowNftClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Your minted NFT:</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <ShowNft nfts={mintsCreated} />
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      </>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
   return (
-    <main>
+    <main className="min-h-screen bg-background">
       <div className={styles.wallet}>
         <WalletMultiButtonDynamic />
       </div>
 
-      <div className={styles.center}>
+      <div className="p-4">
         <PageContent key="content" />
       </div>
+
+      {/* NFT Display Modal */}
+      <Modal 
+        isOpen={isShowNftOpen} 
+        onClose={onShowNftClose}
+        title="Your minted NFT:"
+      >
+        <ShowNft nfts={mintsCreated} />
+      </Modal>
+
+      {/* Initializer Modal */}
+      {umi.identity.publicKey === candyMachine?.authority && (
+        <>
+          <div className="flex justify-center mt-10">
+            <button
+              onClick={onInitializerOpen}
+              className="bg-incinerator hover:bg-scorcher text-white px-4 py-2 rounded"
+            >
+              Initialize Everything!
+            </button>
+          </div>
+          <Modal
+            isOpen={isInitializerOpen}
+            onClose={onInitializerClose}
+            title="Initializer"
+            maxWidth="max-w-3xl"
+          >
+            <InitializeModal
+              umi={umi}
+              candyMachine={candyMachine}
+              candyGuard={candyGuard}
+            />
+          </Modal>
+        </>
+      )}
     </main>
   );
 }
