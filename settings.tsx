@@ -3,7 +3,7 @@
 export const mintText = [
   {
     label: "default",
-    header: "Redeem Your Slug",
+    header: "Redeem Gen 4 Slugs",
     mintText: "You need to hold a Gen 4 mint token to redeem your Sol Slug. Each token can be used to mint one Slug.",
     buttonLabel: "Mint now!",
   },

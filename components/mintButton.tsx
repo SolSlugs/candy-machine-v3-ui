@@ -401,8 +401,8 @@ export function ButtonList({
     
     return (
       <div key={index}>
-        <div className="flex flex-col bg-widget/30 rounded-lg p-6">
-          <div className="flex justify-between items-center mb-2">
+        <div className="flex flex-col bg-widget/30 rounded-lg p-6 space-y-4">
+          <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-primary">
               {text ? text.header : "header missing in settings.tsx"}
             </h3>
@@ -419,11 +419,11 @@ export function ButtonList({
               )}
           </div>
 
-          <p className="text-white/90 text-base mb-4 leading-relaxed">
+          <p className="text-white/90 text-base">
             {text ? text.mintText : "mintText missing in settings.tsx"}
           </p>
 
-          <div className="flex items-center justify-between mt-auto">
+          <div className="flex items-center justify-between">
             {!isWalletConnected ? (
               <div className="w-full">
                 <p className="text-white/90 text-base">
