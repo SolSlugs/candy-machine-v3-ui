@@ -139,26 +139,56 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
 
           {stage === 'incinerator' && (
             <motion.div className="relative w-[560px] h-[560px] flex items-center justify-center">
-              {/* Logo */}
+              {/* Logo with enhanced squish animations */}
               <motion.div
                 className="relative w-[420px]"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ 
-                  scale: [0.8, 1, 0.9, 1.1, 0.95, 1.05, 0.98, 1.02, 1],
-                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 0]
+                  scale: [
+                    0.8, // Start
+                    1,   // Initial scale
+                    0.9, // First squish
+                    1.1, // First expand
+                    0.85, // Second squish (1523ms)
+                    1.15, // Second expand
+                    0.9,  // Third squish (2073ms)
+                    1.1,  // Third expand
+                    0.85, // Fourth squish (2327ms)
+                    1.15, // Fourth expand
+                    0.9,  // Fifth squish (2684ms)
+                    1.1,  // Fifth expand
+                    0.85, // Sixth squish (3047ms)
+                    1.15, // Sixth expand
+                    0.9,  // Seventh squish (3415ms)
+                    1.1,  // Seventh expand
+                    0.85, // Eighth squish (3811ms)
+                    1.15, // Eighth expand
+                    1,    // Final position
+                  ],
+                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
                 }}
                 transition={{
                   duration: 5.181,
                   times: [
                     0,
-                    1523/5181,
-                    2073/5181,
-                    2327/5181,
-                    2684/5181,
-                    3047/5181,
-                    3415/5181,
-                    3811/5181,
-                    1
+                    1523/5181,  // Initial movement
+                    1523/5181,  // First squish
+                    1800/5181,
+                    2073/5181,  // Second squish
+                    2200/5181,
+                    2327/5181,  // Third squish
+                    2500/5181,
+                    2684/5181,  // Fourth squish
+                    2800/5181,
+                    3047/5181,  // Fifth squish
+                    3200/5181,
+                    3415/5181,  // Sixth squish
+                    3600/5181,
+                    3811/5181,  // Seventh squish
+                    4000/5181,
+                    4219/5181,  // Eighth squish
+                    4400/5181,
+                    5181/5181,
                   ],
                   ease: "easeInOut"
                 }}
@@ -170,7 +200,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                 />
               </motion.div>
 
-              {/* Particle effects */}
+              {/* Fire particle effects */}
               {[1523, 2327, 3047, 3811].map((timing) => (
                 <motion.div
                   key={timing}
@@ -183,26 +213,31 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                     ease: "easeOut"
                   }}
                 >
-                  {Array.from({ length: 8 }).map((_, i) => (
+                  {Array.from({ length: 12 }).map((_, i) => (
                     <motion.div
                       key={i}
-                      className="absolute w-6 h-6 rounded-full"
+                      className="absolute w-8 h-12"
                       style={{
                         left: '50%',
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        backgroundColor: '#94e448',
-                        boxShadow: '0 0 10px rgba(244, 67, 67, 0.7)'
+                        background: `linear-gradient(to top, 
+                          rgba(148, 228, 72, 0.1) 0%, 
+                          rgba(148, 228, 72, 0.4) 50%, 
+                          rgba(148, 228, 72, 0.1) 100%)`,
+                        clipPath: 'polygon(50% 0%, 100% 90%, 50% 100%, 0% 90%)', // Flame shape
+                        filter: 'blur(4px)',
                       }}
                       initial={{ scale: 0 }}
                       animate={{
-                        x: Math.cos(i * Math.PI/4) * 210,
-                        y: Math.sin(i * Math.PI/4) * 210,
-                        scale: [0, 1, 0],
-                        opacity: [0, 1, 0]
+                        x: Math.cos(i * Math.PI/6) * 210,
+                        y: Math.sin(i * Math.PI/6) * 210,
+                        scale: [0, 1.2, 0],
+                        opacity: [0, 0.8, 0],
+                        rotate: [0, Math.random() * 45 - 22.5]
                       }}
                       transition={{
-                        duration: 0.5,
+                        duration: 0.6,
                         delay: timing/1000,
                         ease: "easeOut"
                       }}
@@ -211,24 +246,25 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                 </motion.div>
               ))}
 
-              {/* Ring Animation */}
+              {/* Fire ring effect */}
               {[2073, 2684, 3415, 4219].map((timing) => (
                 <motion.div
                   key={timing}
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                   <motion.div
-                    className="w-[420px] h-[420px] rounded-full"
+                    className="w-[420px] h-[420px]"
                     style={{
-                      border: '4px solid #94e448'
+                      background: 'radial-gradient(circle, rgba(148, 228, 72, 0.2) 60%, transparent 70%)',
+                      filter: 'blur(8px)',
                     }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ 
                       scale: [0.5, 1.5],
-                      opacity: [0, 1, 0]
+                      opacity: [0, 0.8, 0]
                     }}
                     transition={{
-                      duration: 0.6,
+                      duration: 0.8,
                       delay: timing/1000,
                       times: [0, 0.3, 1],
                       ease: "easeOut"
