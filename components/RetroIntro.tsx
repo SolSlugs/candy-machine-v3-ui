@@ -182,11 +182,13 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                   {Array.from({ length: 8 }).map((_, i) => (
                     <motion.div
                       key={i}
-                      className="absolute w-6 h-6 bg-incinerator rounded-full"
+                      className="absolute w-6 h-6 rounded-full"
                       style={{
                         left: '50%',
                         top: '50%',
-                        transform: 'translate(-50%, -50%)'
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: '#F44343',
+                        boxShadow: '0 0 10px rgba(244, 67, 67, 0.7)'
                       }}
                       initial={{ scale: 0 }}
                       animate={{
@@ -212,7 +214,10 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                   className="absolute inset-0 flex items-center justify-center pointer-events-none"
                 >
                   <motion.div
-                    className="w-[420px] h-[420px] border-4 border-incinerator rounded-full"
+                    className="w-[420px] h-[420px] rounded-full"
+                    style={{
+                      border: '4px solid #F44343'
+                    }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ 
                       scale: [0.5, 1.5],
