@@ -54,7 +54,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
     audioRef.current = new Audio('/ss.ogg');
     audioRef.current.play().catch(console.error);
 
-    // Schedule the transition to incinerator stage
+    // Schedule the transition to incinerator stage with longer buffer
     setTimeout(() => {
       setStage('incinerator');
       incineratorAudioRef.current = new Audio('/dkc.ogg');
@@ -65,7 +65,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
         setStage('complete');
         setTimeout(onIntroComplete, 300);
       }, 5442); // Length of dkc.ogg
-    }, 1472); // Length of ss.ogg + 300ms buffer
+    }, 1772); // Length of ss.ogg + 600ms buffer (increased from 300ms)
   };
 
   useEffect(() => {
@@ -115,7 +115,11 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
               className="relative"
               initial={{ scale: 0.3, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1.172, ease: [0.23, 1, 0.32, 1] }}
+              exit={{ opacity: 0 }}
+              transition={{ 
+                duration: stage === 'solslugs' ? 1.172 : 0.3,
+                ease: [0.23, 1, 0.32, 1]
+              }}
             >
               {particles.map(particle => (
                 <Particle key={particle.id} delay={particle.delay} />
@@ -187,7 +191,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                         left: '50%',
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        backgroundColor: '#F44343',
+                        backgroundColor: '#94e448',
                         boxShadow: '0 0 10px rgba(244, 67, 67, 0.7)'
                       }}
                       initial={{ scale: 0 }}
@@ -216,7 +220,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                   <motion.div
                     className="w-[420px] h-[420px] rounded-full"
                     style={{
-                      border: '4px solid #F44343'
+                      border: '4px solid #94e448'
                     }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ 
