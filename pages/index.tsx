@@ -15,10 +15,11 @@ import { ButtonList } from "../components/mintButton";
 import { GuardReturn } from "../utils/checkerHelper";
 import { ShowNft } from "../components/showNft";
 import { InitializeModal } from "../components/initializeModal";
-import { image, headerText } from "../settings";
 import { useSolanaTime } from "@/utils/SolanaTimeContext";
 import { useToast } from '@/contexts/ToastContext';
 import { useDisclosure } from '@/hooks/useDisclosure';
+import { RetroIntro } from "../components/RetroIntro";
+import { RetroDialog } from "../components/RetroDialog";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -119,7 +120,7 @@ export default function Home() {
   ]);
   const [firstRun, setFirstRun] = useState(true);
   const [checkEligibility, setCheckEligibility] = useState<boolean>(true);
-
+  const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
@@ -145,7 +146,15 @@ export default function Home() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { candyMachine, candyGuard } = useCandyMachine(umi, candyMachineId, checkEligibility, setCheckEligibility, firstRun, setFirstRun);
+
+  const { candyMachine, candyGuard } = useCandyMachine(
+    umi, 
+    candyMachineId, 
+    checkEligibility, 
+    setCheckEligibility, 
+    firstRun, 
+    setFirstRun
+  );
 
   useEffect(() => {
     const checkEligibilityFunc = async () => {
@@ -181,58 +190,43 @@ export default function Home() {
 
   const PageContent = () => {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-widget rounded-lg shadow-xl">
-          {/* Header */}
-          <div className="p-6 border-b border-accent">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-primary">Sol Slugs Gen 4 Mint</h1>
+      <div className="flex justify-center items-center min-h-screen p-4">
+        <div className="relative w-[512px] h-[512px] overflow-hidden rounded-lg border-4 border-primary">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ 
+              backgroundImage: 'url("/nightshift.png")',
+              imageRendering: 'pixelated'
+            }}
+          />
+          
+          <div className="relative h-full flex flex-col p-6">
+            <div className="flex-grow">
               {!loading && (
-                <div className="bg-accent rounded p-3">
-                  <div className="flex flex-col items-center">
-                    <span className="text-sm text-white">Available NFTs:</span>
-                    <span className="font-semibold text-primary">
-                      {Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/
-                      {Number(candyMachine?.data.itemsAvailable)}
-                    </span>
-                  </div>
+                <div className="font-press-start text-xs text-primary mb-6">
+                  Available: {Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/
+                  {Number(candyMachine?.data.itemsAvailable)}
                 </div>
+              )}
+
+              {loading ? (
+                <div className="h-8 bg-widget/50 animate-pulse rounded-sm" />
+              ) : (
+                <button
+                  onClick={() => {
+                    // Your mint logic here
+                  }}
+                  className="w-full font-press-start text-xs bg-black/80 hover:bg-black/60 text-primary border-2 border-primary px-4 py-2 rounded-sm transition-colors duration-200"
+                >
+                  MINT NOW
+                </button>
               )}
             </div>
-          </div>
 
-          {/* Logo Section - adjusted positioning */}
-          <div className="flex justify-center -mb-12">
-            <img 
-              src="/solslugs.png" 
-              alt="Sol Slugs Logo" 
-              className="h-24 w-24 transform -translate-y-12"
-            />
-          </div>
-
-          {/* Body - reduced top padding */}
-          <div className="pt-0 px-6 pb-6">
-            <div>
-              {loading ? (
-                <div className="space-y-4">
-                  <div className="h-8 bg-widget animate-pulse rounded"></div>
-                  <div className="h-8 bg-widget animate-pulse rounded"></div>
-                  <div className="h-8 bg-widget animate-pulse rounded"></div>
-                </div>
-              ) : (
-                <ButtonList
-                  guardList={guards}
-                  candyMachine={candyMachine}
-                  candyGuard={candyGuard}
-                  umi={umi}
-                  ownedTokens={ownedTokens}
-                  setGuardList={setGuards}
-                  mintsCreated={mintsCreated}
-                  setMintsCreated={setMintsCreated}
-                  onOpen={onShowNftOpen}
-                  setCheckEligibility={setCheckEligibility}
-                />
-              )}
+            <div className="flex-shrink-0 pb-6">
+              <RetroDialog 
+                text="What's up?! You've reached the Sol Slugs Gen 4 mint, dude. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go."
+              />
             </div>
           </div>
         </div>
@@ -242,49 +236,65 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className={styles.wallet}>
-        <WalletMultiButtonDynamic />
-      </div>
-
-      <div className="p-4">
-        <PageContent key="content" />
-      </div>
-
-      {/* NFT Display Modal */}
-      <Modal 
-        isOpen={isShowNftOpen} 
-        onClose={onShowNftClose}
-      >
-        <div className="mb-4">
-          <h2 className="text-lg font-medium text-primary">Your minted NFT:</h2>
-        </div>
-        <ShowNft nfts={mintsCreated} />
-      </Modal>
-
-      {/* Initializer Modal */}
-      {umi.identity.publicKey === candyMachine?.authority && (
+      {showIntro ? (
+        <RetroIntro onIntroComplete={() => setShowIntro(false)} />
+      ) : (
         <>
-          <div className="flex justify-center mt-10">
+          <div className={styles.wallet}>
+            <WalletMultiButtonDynamic />
+          </div>
+
+          <div className="p-4">
+            <PageContent key="content" />
+          </div>
+
+          {/* Replay Intro Button */}
+          <div className="fixed bottom-4 right-4">
             <button
-              onClick={onInitializerOpen}
-              className="bg-incinerator hover:bg-scorcher text-white px-4 py-2 rounded"
+              onClick={() => setShowIntro(true)}
+              className="bg-widget hover:bg-accent text-primary px-4 py-2 rounded-lg shadow-lg transition-colors duration-200 font-press-start text-sm"
             >
-              Initialize Everything!
+              Replay Intro
             </button>
           </div>
-          <Modal
-            isOpen={isInitializerOpen}
-            onClose={onInitializerClose}
+
+          {/* NFT Display Modal */}
+          <Modal 
+            isOpen={isShowNftOpen} 
+            onClose={onShowNftClose}
           >
             <div className="mb-4">
-              <h2 className="text-lg font-medium text-primary">Initializer</h2>
+              <h2 className="text-lg font-medium text-primary">Your minted NFT:</h2>
             </div>
-            <InitializeModal
-              umi={umi}
-              candyMachine={candyMachine}
-              candyGuard={candyGuard}
-            />
+            <ShowNft nfts={mintsCreated} />
           </Modal>
+
+          {/* Initializer Modal */}
+          {umi.identity.publicKey === candyMachine?.authority && (
+            <>
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={onInitializerOpen}
+                  className="bg-incinerator hover:bg-scorcher text-white px-4 py-2 rounded"
+                >
+                  Initialize Everything!
+                </button>
+              </div>
+              <Modal
+                isOpen={isInitializerOpen}
+                onClose={onInitializerClose}
+              >
+                <div className="mb-4">
+                  <h2 className="text-lg font-medium text-primary">Initializer</h2>
+                </div>
+                <InitializeModal
+                  umi={umi}
+                  candyMachine={candyMachine}
+                  candyGuard={candyGuard}
+                />
+              </Modal>
+            </>
+          )}
         </>
       )}
     </main>

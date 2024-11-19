@@ -3,17 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 16, 16, 16;
-  --background-end-rgb: 16, 16, 16;
+  --background: #111111;
+  --widget: #1A1A1A;
+  --accent: #2A2A2A;
+  --primary: #FFFFFF;
+  --secondary: #888888;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+  background: var(--background);
+  color: var(--primary);
 }
 
 #__next {
