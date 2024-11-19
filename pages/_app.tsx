@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { UmiProvider } from "../utils/UmiProvider";
 import "@/styles/globals.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
-import { image, headerText } from 'settings';
+import { headerText } from 'settings';
 import { SolanaTimeProvider } from "@/utils/SolanaTimeContext";
 import { ToastProvider } from '@/contexts/ToastContext';
 
@@ -29,10 +29,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta property="og:title" content={headerText} />
         <meta
           property="og:description"
-          content="Website is based on Mark Sackerbergs work"
+          content="Sol Slugs Gen 4 Mint!"
         />
-        <meta name="description" content="Website is based on Mark Sackerbergs work" />
-        <meta property="og:image" content={image} />
+        <meta name="description" content="Sol Slugs Gen 4 Mint!" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{headerText}</title>
         <link rel="icon" href="/favicon.ico" />
