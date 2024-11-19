@@ -379,7 +379,7 @@ export function ButtonList({
     const text = mintText.find((elem) => elem.label === buttonGuard.label);
     
     return (
-      <div key={index} className="w-full">
+      <div key={index} className="w-full space-y-2">
         {!isWalletConnected ? (
           <button
             disabled
@@ -388,35 +388,44 @@ export function ButtonList({
             CONNECT WALLET
           </button>
         ) : (
-          <button
-            onClick={() => mintClick(
-              umi,
-              buttonGuard,
-              candyMachine,
-              candyGuard,
-              ownedTokens,
-              numberInputValues[buttonGuard.label] || 1,
-              mintsCreated,
-              setMintsCreated,
-              guardList,
-              setGuardList,
-              onOpen,
-              setCheckEligibility,
-              toast
+          <>
+            <button
+              onClick={() => mintClick(
+                umi,
+                buttonGuard,
+                candyMachine,
+                candyGuard,
+                ownedTokens,
+                numberInputValues[buttonGuard.label] || 1,
+                mintsCreated,
+                setMintsCreated,
+                guardList,
+                setGuardList,
+                onOpen,
+                setCheckEligibility,
+                toast
+              )}
+              disabled={!buttonGuard.allowed}
+              className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200
+                ${buttonGuard.allowed 
+                  ? 'bg-black/80 hover:bg-black/60 text-primary border-2 border-primary' 
+                  : 'bg-black/80 text-primary/50 border-2 border-primary/50 cursor-not-allowed'}`}
+              title={buttonGuard.reason}
+            >
+              {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
+                <span>MINTING...</span>
+              ) : (
+                "MINT NOW"
+              )}
+            </button>
+            
+            {/* Error Message */}
+            {!buttonGuard.allowed && isWalletConnected && (
+              <div className="font-press-start text-[10px] text-primary/70 text-center px-2">
+                No mint tokens found in wallet
+              </div>
             )}
-            disabled={!buttonGuard.allowed}
-            className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200
-              ${buttonGuard.allowed 
-                ? 'bg-black/80 hover:bg-black/60 text-primary border-2 border-primary' 
-                : 'bg-black/80 text-primary/50 border-2 border-primary/50 cursor-not-allowed'}`}
-            title={buttonGuard.reason}
-          >
-            {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
-              <span>MINTING...</span>
-            ) : (
-              "MINT NOW"
-            )}
-          </button>
+          </>
         )}
       </div>
     );

@@ -1,82 +1,53 @@
-import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
-
-type ToastProps = {
+interface ToastProps {
   message: string;
-  type: ToastType;
+  type: 'success' | 'error' | 'info' | 'warning';
   description?: string;
-  duration?: number;
   onClose: () => void;
-};
+}
 
-const Toast = ({ message, type, description, duration = 3000, onClose }: ToastProps) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      setTimeout(onClose, 300); // Allow time for fade out animation
-    }, duration);
-
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
-
-  const baseClasses = "fixed bottom-4 right-4 p-4 rounded-lg shadow-lg transition-all duration-300 transform";
-  const visibilityClasses = isVisible ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0";
-  
-  const typeClasses = {
-    success: "bg-primary text-background border border-accent",
-    error: "bg-incinerator text-background border border-pyro",
-    info: "bg-widget text-primary border border-accent",
-    warning: "bg-scorcher text-background border border-pyro"
+export const Toast: React.FC<ToastProps> = ({ message, type, description, onClose }) => {
+  const getTypeStyles = () => {
+    switch (type) {
+      case 'success':
+        return 'border-primary text-primary';
+      case 'error':
+        return 'border-incinerator text-incinerator';
+      case 'warning':
+        return 'border-scorcher text-scorcher';
+      case 'info':
+        return 'border-exclusive text-exclusive';
+      default:
+        return 'border-primary text-primary';
+    }
   };
 
   return (
-    <div className={`${baseClasses} ${typeClasses[type]} ${visibilityClasses}`}>
-      <div className="flex items-start">
-        <div className="flex-1">
-          <h3 className="font-bold">{message}</h3>
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.3 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 
+        bg-black/90 border-2 rounded-sm px-4 py-3 
+        font-press-start text-xs max-w-sm w-full
+        ${getTypeStyles()}`}
+    >
+      <div className="flex gap-3">
+        <div className="flex-grow">
+          <p className="mb-1">{message}</p>
           {description && (
-            <p className="mt-1 text-sm opacity-90">{description}</p>
+            <p className="opacity-80 text-[10px]">{description}</p>
           )}
         </div>
         <button 
-          onClick={() => setIsVisible(false)} 
-          className="ml-4 hover:opacity-75 transition-opacity"
+          onClick={onClose}
+          className="flex-shrink-0 hover:opacity-70 transition-opacity"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          ✕
         </button>
       </div>
-    </div>
-  );
-};
-
-// Toast manager to handle multiple toasts
-type ToastManagerProps = {
-  toasts: Array<{
-    id: string;
-    message: string;
-    type: ToastType;
-    description?: string;
-  }>;
-  removeToast: (id: string) => void;
-};
-
-export const ToastManager = ({ toasts, removeToast }: ToastManagerProps) => {
-  return (
-    <div className="fixed bottom-0 right-0 p-4 space-y-4 z-50">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          description={toast.description}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-    </div>
+    </motion.div>
   );
 }; 

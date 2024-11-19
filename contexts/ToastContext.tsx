@@ -1,35 +1,40 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { ToastManager, ToastType } from '../components/Toast';
+import { Toast } from '../components/Toast';
+import { AnimatePresence } from 'framer-motion';
 
-type Toast = {
-  id: string;
-  message: string;
-  type: ToastType;
-  description?: string;
-};
-
-type ToastContextType = {
-  showToast: (message: string, type: ToastType, description?: string) => void;
-};
+interface ToastContextType {
+  showToast: (message: string, type: 'success' | 'error' | 'info' | 'warning', description?: string) => void;
+}
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toast, setToast] = useState<{
+    message: string;
+    type: 'success' | 'error' | 'info' | 'warning';
+    description?: string;
+  } | null>(null);
 
-  const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
-
-  const showToast = useCallback((message: string, type: ToastType, description?: string) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts(prev => [...prev, { id, message, type, description }]);
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' | 'warning', description?: string) => {
+    setToast({ message, type, description });
+    setTimeout(() => {
+      setToast(null);
+    }, 5000); // Auto dismiss after 5 seconds
   }, []);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <ToastManager toasts={toasts} removeToast={removeToast} />
+      <AnimatePresence>
+        {toast && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            description={toast.description}
+            onClose={() => setToast(null)}
+          />
+        )}
+      </AnimatePresence>
     </ToastContext.Provider>
   );
 };

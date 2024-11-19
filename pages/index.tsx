@@ -6,6 +6,7 @@ import {
 import { DigitalAssetWithToken, JsonMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import dynamic from "next/dynamic";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import React from 'react';
 import { useUmi } from "../utils/useUmi";
 import { fetchCandyMachine, safeFetchCandyGuard, CandyGuard, CandyMachine, AccountVersion } from "@metaplex-foundation/mpl-candy-machine"
 import styles from "../styles/Home.module.css";
@@ -104,6 +105,124 @@ const useCandyMachine = (
 
 };
 
+// Move PageContent outside and memoize it
+const PageContent = React.memo(({ 
+  loading, 
+  candyMachine, 
+  guards, 
+  dialogText, 
+  ownedTokens,
+  setGuards,
+  mintsCreated,
+  setMintsCreated,
+  onShowNftOpen,
+  setCheckEligibility,
+  umi,
+  candyGuard
+}: {
+  loading: boolean;
+  candyMachine: CandyMachine | undefined;
+  guards: GuardReturn[];
+  dialogText: string;
+  ownedTokens: DigitalAssetWithToken[] | undefined;
+  setGuards: Dispatch<SetStateAction<GuardReturn[]>>;
+  mintsCreated: { mint: PublicKey, offChainMetadata: JsonMetadata | undefined }[] | undefined;
+  setMintsCreated: Dispatch<SetStateAction<{ mint: PublicKey, offChainMetadata: JsonMetadata | undefined }[] | undefined>>;
+  onShowNftOpen: () => void;
+  setCheckEligibility: Dispatch<SetStateAction<boolean>>;
+  umi: Umi;
+  candyGuard: CandyGuard | undefined;
+}) => {
+  const total = Number(candyMachine?.data.itemsAvailable) || 0;
+  const remaining = total - Number(candyMachine?.itemsRedeemed || 0);
+  const percentage = ((remaining / total) * 100) || 0;
+
+  return (
+    <div className="flex justify-center items-center min-h-screen p-4">
+      <div className="relative w-[512px] h-[512px] overflow-hidden rounded-lg border-4 border-primary">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: 'url("/nightshift.png")',
+            imageRendering: 'pixelated'
+          }}
+        />
+        
+        <div className="relative h-full flex flex-col p-6">
+          <div className="flex-grow">
+            {!loading && (
+              <div className="font-press-start text-[10px] text-primary mb-6">
+                <div className="mb-2">AVAILABLE:</div>
+                <div className="bg-black/80 border-2 border-primary p-2 rounded-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-grow bg-black/50 h-4 rounded-sm overflow-hidden relative">
+                      <div 
+                        className="absolute top-0 bottom-0 bg-primary transition-all duration-500"
+                        style={{ 
+                          width: `calc(${percentage}% + 4px)`,
+                          clipPath: `polygon(0 0, calc(100% - 4px) 0, 100% 100%, 0 100%)`
+                        }}
+                      />
+                    </div>
+                    <div className="flex-shrink-0 w-16 text-right">
+                      {remaining}/{total}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-black/80 rounded-sm">
+              {loading ? (
+                <div className="font-press-start text-[10px] text-primary p-4">
+                  <div className="mb-2">AVAILABLE:</div>
+                  <div className="bg-black/80 border-2 border-primary p-2 rounded-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-grow bg-black/50 h-4 rounded-sm overflow-hidden relative">
+                        <div 
+                          className="absolute top-0 bottom-0 bg-primary/50 animate-pulse"
+                          style={{ 
+                            width: 'calc(100% + 4px)',
+                            clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 100%, 0 100%)'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-shrink-0 w-16 text-right opacity-50">
+                        --/--
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <ButtonList
+                  guardList={guards}
+                  candyMachine={candyMachine}
+                  candyGuard={candyGuard}
+                  umi={umi}
+                  ownedTokens={ownedTokens}
+                  setGuardList={setGuards}
+                  mintsCreated={mintsCreated}
+                  setMintsCreated={setMintsCreated}
+                  onOpen={onShowNftOpen}
+                  setCheckEligibility={setCheckEligibility}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex-shrink-0 pb-6">
+            <RetroDialog 
+              text={dialogText}
+              dialogKey="main-dialog"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+PageContent.displayName = 'PageContent';
 
 export default function Home() {
   const umi = useUmi();
@@ -121,6 +240,7 @@ export default function Home() {
   const [firstRun, setFirstRun] = useState(true);
   const [checkEligibility, setCheckEligibility] = useState<boolean>(true);
   const [showIntro, setShowIntro] = useState(true);
+  const [dialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
@@ -188,58 +308,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [umi, checkEligibility, firstRun]);
 
-  const PageContent = () => {
-    return (
-      <div className="flex justify-center items-center min-h-screen p-4">
-        <div className="relative w-[512px] h-[512px] overflow-hidden rounded-lg border-4 border-primary">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ 
-              backgroundImage: 'url("/nightshift.png")',
-              imageRendering: 'pixelated'
-            }}
-          />
-          
-          <div className="relative h-full flex flex-col p-6">
-            <div className="flex-grow">
-              {!loading && (
-                <div className="font-press-start text-xs text-primary mb-6">
-                  Available: {Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/
-                  {Number(candyMachine?.data.itemsAvailable)}
-                </div>
-              )}
-
-              <div className="bg-black/80 rounded-sm">
-                {loading ? (
-                  <div className="h-8 bg-widget/50 animate-pulse rounded-sm" />
-                ) : (
-                  <ButtonList
-                    guardList={guards}
-                    candyMachine={candyMachine}
-                    candyGuard={candyGuard}
-                    umi={umi}
-                    ownedTokens={ownedTokens}
-                    setGuardList={setGuards}
-                    mintsCreated={mintsCreated}
-                    setMintsCreated={setMintsCreated}
-                    onOpen={onShowNftOpen}
-                    setCheckEligibility={setCheckEligibility}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="flex-shrink-0 pb-6">
-              <RetroDialog 
-                text="What's up?! You've reached the Sol Slugs Gen 4 mint, dude. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go."
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <main className="min-h-screen bg-background">
       {showIntro ? (
@@ -250,9 +318,20 @@ export default function Home() {
             <WalletMultiButtonDynamic />
           </div>
 
-          <div className="p-4">
-            <PageContent key="content" />
-          </div>
+          <PageContent
+            loading={loading}
+            candyMachine={candyMachine}
+            guards={guards}
+            dialogText={dialogText}
+            ownedTokens={ownedTokens}
+            setGuards={setGuards}
+            mintsCreated={mintsCreated}
+            setMintsCreated={setMintsCreated}
+            onShowNftOpen={onShowNftOpen}
+            setCheckEligibility={setCheckEligibility}
+            umi={umi}
+            candyGuard={candyGuard}
+          />
 
           {/* Replay Intro Button */}
           <div className="fixed bottom-4 right-4">

@@ -3,17 +3,17 @@ import { useState, useEffect, useRef } from 'react';
 
 interface RetroDialogProps {
   text: string;
-  onComplete?: () => void;
+  dialogKey?: string;
 }
 
-export const RetroDialog = ({ text, onComplete }: RetroDialogProps) => {
+export const RetroDialog = ({ text, dialogKey = 'default' }: RetroDialogProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
   const textContainerRef = useRef<HTMLDivElement>(null);
-  const textSpeed = 50; // ms per character
+  const textSpeed = 50;
 
   useEffect(() => {
     audioRef.current = new Audio('/textdialog.ogg');
@@ -21,12 +21,9 @@ export const RetroDialog = ({ text, onComplete }: RetroDialogProps) => {
   }, []);
 
   useEffect(() => {
-    // If already typing, don't start again
     if (isTypingRef.current) return;
     
     let currentIndex = 0;
-    setDisplayedText('');
-    setIsComplete(false);
     isTypingRef.current = true;
 
     const typeText = () => {
@@ -38,7 +35,6 @@ export const RetroDialog = ({ text, onComplete }: RetroDialogProps) => {
           audioRef.current.play().catch(console.error);
         }
 
-        // Scroll to bottom after text update
         setTimeout(() => {
           if (textContainerRef.current) {
             textContainerRef.current.scrollTop = textContainerRef.current.scrollHeight;
@@ -56,12 +52,10 @@ export const RetroDialog = ({ text, onComplete }: RetroDialogProps) => {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
           }
-          if (onComplete) onComplete();
         }
       }
     };
 
-    // Start typing immediately with the first character
     typeText();
 
     return () => {
@@ -74,7 +68,7 @@ export const RetroDialog = ({ text, onComplete }: RetroDialogProps) => {
       }
       isTypingRef.current = false;
     };
-  }, [text, onComplete]);
+  }, [text, dialogKey]);
 
   return (
     <motion.div 
