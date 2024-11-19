@@ -6,17 +6,21 @@ import {
 import { DigitalAssetWithToken, JsonMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import dynamic from "next/dynamic";
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import React from 'react';
 import { useUmi } from "../utils/useUmi";
 import { fetchCandyMachine, safeFetchCandyGuard, CandyGuard, CandyMachine, AccountVersion } from "@metaplex-foundation/mpl-candy-machine"
 import styles from "../styles/Home.module.css";
 import { guardChecker } from "../utils/checkAllowed";
-import { Center, Card, CardHeader, CardBody, StackDivider, Heading, Stack, useToast, Text, Skeleton, useDisclosure, Button, Modal, ModalBody, ModalCloseButton, ModalContent, Image, ModalHeader, ModalOverlay, Box, Divider, VStack, Flex } from '@chakra-ui/react';
+import {  Modal } from '@chakra-ui/react';
 import { ButtonList } from "../components/mintButton";
 import { GuardReturn } from "../utils/checkerHelper";
 import { ShowNft } from "../components/showNft";
 import { InitializeModal } from "../components/initializeModal";
-import { image, headerText } from "../settings";
 import { useSolanaTime } from "@/utils/SolanaTimeContext";
+import { useToast } from '@/contexts/ToastContext';
+import { useDisclosure } from '@/hooks/useDisclosure';
+import { RetroIntro } from "../components/RetroIntro";
+import { RetroDialog } from "../components/RetroDialog";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -42,16 +46,11 @@ const useCandyMachine = (
       if (checkEligibility) {
         if (!candyMachineId) {
           console.error("No candy machine in .env!");
-          if (!toast.isActive("no-cm")) {
-            toast({
-              id: "no-cm",
-              title: "No candy machine in .env!",
-              description: "Add your candy machine address to the .env file!",
-              status: "error",
-              duration: 999999,
-              isClosable: true,
-            });
-          }
+          toast.showToast(
+            "No candy machine in .env!",
+            "error",
+            "Add your candy machine address to the .env file!"
+          );
           return;
         }
 
@@ -60,26 +59,20 @@ const useCandyMachine = (
           candyMachine = await fetchCandyMachine(umi, publicKey(candyMachineId));
           //verify CM Version
           if (candyMachine.version != AccountVersion.V2){
-            toast({
-              id: "wrong-account-version",
-              title: "Wrong candy machine account version!",
-              description: "Please use latest sugar to create your candy machine. Need Account Version 2!",
-              status: "error",
-              duration: 999999,
-              isClosable: true,
-            });
+            toast.showToast(
+              "Wrong candy machine account version!",
+              "error",
+              "Please use latest sugar to create your candy machine. Need Account Version 2!"
+            );
             return;
           }
         } catch (e) {
           console.error(e);
-          toast({
-            id: "no-cm-found",
-            title: "The CM from .env is invalid",
-            description: "Are you using the correct environment?",
-            status: "error",
-            duration: 999999,
-            isClosable: true,
-          });
+          toast.showToast(
+            "The CM from .env is invalid",
+            "error",
+            "Are you using the correct environment?"
+          );
         }
         setCandyMachine(candyMachine);
         if (!candyMachine) {
@@ -90,14 +83,11 @@ const useCandyMachine = (
           candyGuard = await safeFetchCandyGuard(umi, candyMachine.mintAuthority);
         } catch (e) {
           console.error(e);
-          toast({
-            id: "no-guard-found",
-            title: "No Candy Guard found!",
-            description: "Do you have one assigned?",
-            status: "error",
-            duration: 999999,
-            isClosable: true,
-          });
+          toast.showToast(
+            "No Candy Guard found!",
+            "error",
+            "Do you have one assigned?"
+          );
         }
         if (!candyGuard) {
           return;
@@ -115,6 +105,124 @@ const useCandyMachine = (
 
 };
 
+// Move PageContent outside and memoize it
+const PageContent = React.memo(({ 
+  loading, 
+  candyMachine, 
+  guards, 
+  dialogText, 
+  ownedTokens,
+  setGuards,
+  mintsCreated,
+  setMintsCreated,
+  onShowNftOpen,
+  setCheckEligibility,
+  umi,
+  candyGuard
+}: {
+  loading: boolean;
+  candyMachine: CandyMachine | undefined;
+  guards: GuardReturn[];
+  dialogText: string;
+  ownedTokens: DigitalAssetWithToken[] | undefined;
+  setGuards: Dispatch<SetStateAction<GuardReturn[]>>;
+  mintsCreated: { mint: PublicKey, offChainMetadata: JsonMetadata | undefined }[] | undefined;
+  setMintsCreated: Dispatch<SetStateAction<{ mint: PublicKey, offChainMetadata: JsonMetadata | undefined }[] | undefined>>;
+  onShowNftOpen: () => void;
+  setCheckEligibility: Dispatch<SetStateAction<boolean>>;
+  umi: Umi;
+  candyGuard: CandyGuard | undefined;
+}) => {
+  const total = Number(candyMachine?.data.itemsAvailable) || 0;
+  const remaining = total - Number(candyMachine?.itemsRedeemed || 0);
+  const percentage = ((remaining / total) * 100) || 0;
+
+  return (
+    <div className="flex justify-center items-center min-h-screen p-4">
+      <div className="relative w-[512px] h-[512px] overflow-hidden rounded-lg border-4 border-primary">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: 'url("/nightshift.png")',
+            imageRendering: 'pixelated'
+          }}
+        />
+        
+        <div className="relative h-full flex flex-col p-6">
+          <div className="flex-grow">
+            {!loading && (
+              <div className="font-press-start text-[10px] text-primary mb-6">
+                <div className="mb-2">AVAILABLE:</div>
+                <div className="bg-black/80 border-2 border-primary p-2 rounded-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-grow bg-black/50 h-4 rounded-sm overflow-hidden relative">
+                      <div 
+                        className="absolute top-0 bottom-0 bg-primary transition-all duration-500"
+                        style={{ 
+                          width: `calc(${percentage}% + 4px)`,
+                          clipPath: `polygon(0 0, calc(100% - 4px) 0, 100% 100%, 0 100%)`
+                        }}
+                      />
+                    </div>
+                    <div className="flex-shrink-0 w-16 text-right">
+                      {remaining}/{total}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-black/80 rounded-sm">
+              {loading ? (
+                <div className="font-press-start text-[10px] text-primary p-4">
+                  <div className="mb-2">AVAILABLE:</div>
+                  <div className="bg-black/80 border-2 border-primary p-2 rounded-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-grow bg-black/50 h-4 rounded-sm overflow-hidden relative">
+                        <div 
+                          className="absolute top-0 bottom-0 bg-primary/50 animate-pulse"
+                          style={{ 
+                            width: 'calc(100% + 4px)',
+                            clipPath: 'polygon(0 0, calc(100% - 4px) 0, 100% 100%, 0 100%)'
+                          }}
+                        />
+                      </div>
+                      <div className="flex-shrink-0 w-16 text-right opacity-50">
+                        --/--
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <ButtonList
+                  guardList={guards}
+                  candyMachine={candyMachine}
+                  candyGuard={candyGuard}
+                  umi={umi}
+                  ownedTokens={ownedTokens}
+                  setGuardList={setGuards}
+                  mintsCreated={mintsCreated}
+                  setMintsCreated={setMintsCreated}
+                  onOpen={onShowNftOpen}
+                  setCheckEligibility={setCheckEligibility}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="flex-shrink-0 pb-6">
+            <RetroDialog 
+              text={dialogText}
+              dialogKey="main-dialog"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+PageContent.displayName = 'PageContent';
 
 export default function Home() {
   const umi = useUmi();
@@ -131,39 +239,42 @@ export default function Home() {
   ]);
   const [firstRun, setFirstRun] = useState(true);
   const [checkEligibility, setCheckEligibility] = useState<boolean>(true);
+  const [showIntro, setShowIntro] = useState(true);
+  const [dialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
 
-
-  if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
-    console.error("No candy machine in .env!")
-    if (!toast.isActive('no-cm')) {
-      toast({
-        id: 'no-cm',
-        title: 'No candy machine in .env!',
-        description: "Add your candy machine address to the .env file!",
-        status: 'error',
-        duration: 999999,
-        isClosable: true,
-      })
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
+      toast.showToast(
+        "No candy machine in .env!",
+        "error",
+        "Add your candy machine address to the .env file!"
+      );
     }
-  }
+  }, [toast]);
+
   const candyMachineId: PublicKey = useMemo(() => {
     if (process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
       return publicKey(process.env.NEXT_PUBLIC_CANDY_MACHINE_ID);
     } else {
       console.error(`NO CANDY MACHINE IN .env FILE DEFINED!`);
-      toast({
-        id: 'no-cm',
-        title: 'No candy machine in .env!',
-        description: "Add your candy machine address to the .env file!",
-        status: 'error',
-        duration: 999999,
-        isClosable: true,
-      })
+      toast.showToast(
+        "No candy machine in .env!",
+        "error",
+        "Add your candy machine address to the .env file!"
+      );
       return publicKey("11111111111111111111111111111111");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const { candyMachine, candyGuard } = useCandyMachine(umi, candyMachineId, checkEligibility, setCheckEligibility, firstRun, setFirstRun);
+
+  const { candyMachine, candyGuard } = useCandyMachine(
+    umi, 
+    candyMachineId, 
+    checkEligibility, 
+    setCheckEligibility, 
+    firstRun, 
+    setFirstRun
+  );
 
   useEffect(() => {
     const checkEligibilityFunc = async () => {
@@ -197,119 +308,80 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [umi, checkEligibility, firstRun]);
 
-  const PageContent = () => {
-    return (
-      <>
-        <style jsx global>
-          {`
-      body {
-          background: #2d3748; 
-       }
-   `}
-        </style>
-        <Card>
-          <CardHeader>
-            <Flex minWidth='max-content' alignItems='center' gap='2'>
-              <Box>
-                <Heading size='md'>{headerText}</Heading>
-              </Box>
-              {loading ? (<></>) : (
-                <Flex justifyContent="flex-end" marginLeft="auto">
-                  <Box background={"teal.100"} borderRadius={"5px"} minWidth={"50px"} minHeight={"50px"} p={2} >
-                    <VStack >
-                      <Text fontSize={"sm"}>Available NFTs:</Text>
-                      <Text fontWeight={"semibold"}>{Number(candyMachine?.data.itemsAvailable) - Number(candyMachine?.itemsRedeemed)}/{Number(candyMachine?.data.itemsAvailable)}</Text>
-                    </VStack>
-                  </Box>
-                </Flex>
-              )}
-            </Flex>
-          </CardHeader>
+  return (
+    <main className="min-h-screen bg-background">
+      {showIntro ? (
+        <RetroIntro onIntroComplete={() => setShowIntro(false)} />
+      ) : (
+        <>
+          <div className={styles.wallet}>
+            <WalletMultiButtonDynamic />
+          </div>
 
-          <CardBody>
-            <Center>
-              <Box
-                rounded={'lg'}
-                mt={-12}
-                pos={'relative'}>
-                <Image
-                  rounded={'lg'}
-                  height={230}
-                  objectFit={'cover'}
-                  alt={"project Image"}
-                  src={image}
-                />
-              </Box>
-            </Center>
-            <Stack divider={<StackDivider />} spacing='8'>
-              {loading ? (
-                <div>
-                  <Divider my="10px" />
-                  <Skeleton height="30px" my="10px" />
-                  <Skeleton height="30px" my="10px" />
-                  <Skeleton height="30px" my="10px" />
+          <PageContent
+            loading={loading}
+            candyMachine={candyMachine}
+            guards={guards}
+            dialogText={dialogText}
+            ownedTokens={ownedTokens}
+            setGuards={setGuards}
+            mintsCreated={mintsCreated}
+            setMintsCreated={setMintsCreated}
+            onShowNftOpen={onShowNftOpen}
+            setCheckEligibility={setCheckEligibility}
+            umi={umi}
+            candyGuard={candyGuard}
+          />
+
+          {/* Replay Intro Button */}
+          <div className="fixed bottom-4 right-4">
+            <button
+              onClick={() => setShowIntro(true)}
+              className="bg-widget hover:bg-accent text-primary px-4 py-2 rounded-lg shadow-lg transition-colors duration-200 font-press-start text-sm"
+            >
+              Replay Intro
+            </button>
+          </div>
+
+          {/* NFT Display Modal */}
+          <Modal 
+            isOpen={isShowNftOpen} 
+            onClose={onShowNftClose}
+          >
+            <div className="mb-4">
+              <h2 className="text-lg font-medium text-primary">Your minted NFT:</h2>
+            </div>
+            <ShowNft nfts={mintsCreated} />
+          </Modal>
+
+          {/* Initializer Modal */}
+          {umi.identity.publicKey === candyMachine?.authority && (
+            <>
+              <div className="flex justify-center mt-10">
+                <button
+                  onClick={onInitializerOpen}
+                  className="bg-incinerator hover:bg-scorcher text-white px-4 py-2 rounded"
+                >
+                  Initialize Everything!
+                </button>
+              </div>
+              <Modal
+                isOpen={isInitializerOpen}
+                onClose={onInitializerClose}
+              >
+                <div className="mb-4">
+                  <h2 className="text-lg font-medium text-primary">Initializer</h2>
                 </div>
-              ) : (
-                <ButtonList
-                  guardList={guards}
+                <InitializeModal
+                  umi={umi}
                   candyMachine={candyMachine}
                   candyGuard={candyGuard}
-                  umi={umi}
-                  ownedTokens={ownedTokens}
-                  setGuardList={setGuards}
-                  mintsCreated={mintsCreated}
-                  setMintsCreated={setMintsCreated}
-                  onOpen={onShowNftOpen}
-                  setCheckEligibility={setCheckEligibility}
                 />
-              )}
-            </Stack>
-          </CardBody>
-        </Card >
-        {umi.identity.publicKey === candyMachine?.authority ? (
-          <>
-            <Center>
-              <Button backgroundColor={"red.200"} marginTop={"10"} onClick={onInitializerOpen}>Initialize Everything!</Button>
-            </Center>
-            <Modal isOpen={isInitializerOpen} onClose={onInitializerClose}>
-              <ModalOverlay />
-              <ModalContent maxW="600px">
-                <ModalHeader>Initializer</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                  < InitializeModal umi={umi} candyMachine={candyMachine} candyGuard={candyGuard} />
-                </ModalBody>
-              </ModalContent>
-            </Modal>
-
-          </>)
-          :
-          (<></>)
-        }
-
-        <Modal isOpen={isShowNftOpen} onClose={onShowNftClose}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Your minted NFT:</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>
-              <ShowNft nfts={mintsCreated} />
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      </>
-    );
-  };
-
-  return (
-    <main>
-      <div className={styles.wallet}>
-        <WalletMultiButtonDynamic />
-      </div>
-
-      <div className={styles.center}>
-        <PageContent key="content" />
-      </div>
+              </Modal>
+            </>
+          )}
+        </>
+      )}
     </main>
   );
 }

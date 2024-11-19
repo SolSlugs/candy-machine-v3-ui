@@ -1,15 +1,9 @@
-.wallet { 
-  display: flex;
-  padding: 3rem;
-  flex-direction: row-reverse;
+.wallet {
+  @apply fixed top-4 right-4 z-50;
 }
 
 .center {
-  position: relative;
-  padding: 3rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  @apply p-4 md:p-8 max-w-7xl mx-auto;
 }
 
 .form > * + * {
