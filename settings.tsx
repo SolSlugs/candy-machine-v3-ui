@@ -12,8 +12,5 @@ export const mintText = [
   { label: "publi", mintText: "Mint Paying with DEF", buttonLabel: "Mint now!", header: "Public Mint" }
 ];
 
-//header image in the ui. replace with your own
-export const image = "https://avatars.githubusercontent.com/u/93528482?v=4";
-
 //website title
-export const headerText = "MarkSackerberg's mint UI";
+export const headerText = "Sol Slugs Gen 4";
