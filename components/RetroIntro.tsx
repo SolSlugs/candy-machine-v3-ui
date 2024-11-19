@@ -159,11 +159,13 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                     1.1,  // Fifth expand
                     0.85, // Sixth squish (3811ms)
                     1.15, // Sixth expand
+                    0.9,  // Seventh squish (4213ms)
+                    1.1,  // Seventh expand
                     1,    // Final position
                     1,    // Hold
                     0     // Fade out
                   ],
-                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
+                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
                 }}
                 transition={{
                   duration: 5.181,
@@ -182,8 +184,10 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                     3600/5181,
                     3811/5181,  // Sixth squish
                     4000/5181,
-                    4800/5181,  // Hold position
-                    5000/5181,  // Start fade
+                    4213/5181,  // Seventh squish
+                    4400/5181,
+                    4800/5181,  // Final position
+                    5000/5181,  // Hold
                     1           // Complete fade
                   ],
                   ease: "easeInOut"
