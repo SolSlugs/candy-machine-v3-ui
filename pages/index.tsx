@@ -209,18 +209,24 @@ export default function Home() {
                 </div>
               )}
 
-              {loading ? (
-                <div className="h-8 bg-widget/50 animate-pulse rounded-sm" />
-              ) : (
-                <button
-                  onClick={() => {
-                    // Your mint logic here
-                  }}
-                  className="w-full font-press-start text-xs bg-black/80 hover:bg-black/60 text-primary border-2 border-primary px-4 py-2 rounded-sm transition-colors duration-200"
-                >
-                  MINT NOW
-                </button>
-              )}
+              <div className="bg-black/80 rounded-sm">
+                {loading ? (
+                  <div className="h-8 bg-widget/50 animate-pulse rounded-sm" />
+                ) : (
+                  <ButtonList
+                    guardList={guards}
+                    candyMachine={candyMachine}
+                    candyGuard={candyGuard}
+                    umi={umi}
+                    ownedTokens={ownedTokens}
+                    setGuardList={setGuards}
+                    mintsCreated={mintsCreated}
+                    setMintsCreated={setMintsCreated}
+                    onOpen={onShowNftOpen}
+                    setCheckEligibility={setCheckEligibility}
+                  />
+                )}
+              </div>
             </div>
 
             <div className="flex-shrink-0 pb-6">

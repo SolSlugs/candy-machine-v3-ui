@@ -360,51 +360,7 @@ export function ButtonList({
     return <></>;
   }
 
-  // Check if wallet is connected by checking if the public key exists
   const isWalletConnected = umi.identity.publicKey !== publicKey("11111111111111111111111111111111");
-
-  const handleNumberInputChange = (label: string, value: string) => {
-    let newValue: number;
-    
-    // Handle empty input
-    if (value === '') {
-      setNumberInputValues((prev) => ({ ...prev, [label]: 1 }));
-      return;
-    }
-
-    // Parse the input value
-    newValue = parseInt(value);
-
-    // Handle invalid numbers
-    if (isNaN(newValue)) {
-      return;
-    }
-
-    // Get max amount from the guard
-    const guard = guardList.find(g => g.label === label);
-    const maxAmount = guard?.maxAmount || 1;
-
-    // Ensure the value is within bounds
-    newValue = Math.max(1, Math.min(newValue, maxAmount));
-    
-    setNumberInputValues((prev) => ({ ...prev, [label]: newValue }));
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, label: string) => {
-    const currentValue = numberInputValues[label] || 1;
-    const guard = guardList.find(g => g.label === label);
-    const maxAmount = guard?.maxAmount || 1;
-
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      const newValue = Math.min(currentValue + 1, maxAmount);
-      handleNumberInputChange(label, newValue.toString());
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      const newValue = Math.max(1, currentValue - 1);
-      handleNumberInputChange(label, newValue.toString());
-    }
-  };
 
   let filteredGuardlist = guardList.filter(
     (elem, index, self) =>
@@ -421,93 +377,47 @@ export function ButtonList({
 
   const listItems = filteredGuardlist.map((buttonGuard, index) => {
     const text = mintText.find((elem) => elem.label === buttonGuard.label);
-    const group = candyGuard.groups.find((elem) => elem.label === buttonGuard.label);
     
     return (
-      <div key={index}>
-        <div className="flex flex-col bg-widget/30 rounded-lg p-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-primary">
-              {text ? text.header : "header missing in settings.tsx"}
-            </h3>
-            {typeof buttonGuard.endTime === 'bigint' && buttonGuard.endTime > createBigInt(0) &&
-              buttonGuard.endTime - solanaTime > createBigInt(0) && (
-                <div className="flex items-center bg-accent/50 rounded-full px-4 py-1">
-                  <span className="text-sm mr-2 text-white">Ending in: </span>
-                  <Timer
-                    toTime={buttonGuard.endTime}
-                    solanaTime={solanaTime}
-                    setCheckEligibility={setCheckEligibility}
-                  />
-                </div>
-              )}
-          </div>
-
-          <p className="text-white/90 text-base">
-            {text ? text.mintText : "mintText missing in settings.tsx"}
-          </p>
-
-          <div className="flex items-center justify-between">
-            {!isWalletConnected ? (
-              <div className="w-full">
-                <p className="text-white/90 text-base">
-                  Connect your wallet to proceed with minting.
-                </p>
-              </div>
-            ) : (
-              <>
-                {process.env.NEXT_PUBLIC_MULTIMINT && buttonGuard.allowed && (
-                  <div className="flex items-center gap-2">
-                    <label className="text-white/70 text-sm">Quantity:</label>
-                    <input
-                      type="number"
-                      value={numberInputValues[buttonGuard.label] || 1}
-                      onChange={(e) => handleNumberInputChange(buttonGuard.label, e.target.value)}
-                      onKeyDown={(e) => handleInputKeyDown(e, buttonGuard.label)}
-                      min={1}
-                      max={buttonGuard.maxAmount || 1}
-                      className="w-20 px-3 py-2 text-sm bg-background border border-accent/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      disabled={!buttonGuard.allowed}
-                    />
-                  </div>
-                )}
-                
-                <button
-                  onClick={() => mintClick(
-                    umi,
-                    buttonGuard,
-                    candyMachine,
-                    candyGuard,
-                    ownedTokens,
-                    numberInputValues[buttonGuard.label] || 1,
-                    mintsCreated,
-                    setMintsCreated,
-                    guardList,
-                    setGuardList,
-                    onOpen,
-                    setCheckEligibility,
-                    toast
-                  )}
-                  disabled={!buttonGuard.allowed}
-                  className={`px-6 py-2.5 text-base font-semibold rounded-lg transition-all duration-200 transform hover:scale-105
-                    ${buttonGuard.allowed 
-                      ? 'bg-primary hover:bg-accent text-background shadow-lg hover:shadow-xl' 
-                      : 'bg-disabled/50 text-white/50 cursor-not-allowed'}`}
-                  title={buttonGuard.reason}
-                >
-                  {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
-                    <div className="flex items-center gap-2">
-                      <span>Minting...</span>
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-background border-t-transparent"></div>
-                    </div>
-                  ) : (
-                    text ? text.buttonLabel : "buttonLabel missing in settings.tsx"
-                  )}
-                </button>
-              </>
+      <div key={index} className="w-full">
+        {!isWalletConnected ? (
+          <button
+            disabled
+            className="w-full font-press-start text-xs bg-black/80 text-primary/50 border-2 border-primary/50 px-4 py-2 rounded-sm"
+          >
+            CONNECT WALLET
+          </button>
+        ) : (
+          <button
+            onClick={() => mintClick(
+              umi,
+              buttonGuard,
+              candyMachine,
+              candyGuard,
+              ownedTokens,
+              numberInputValues[buttonGuard.label] || 1,
+              mintsCreated,
+              setMintsCreated,
+              guardList,
+              setGuardList,
+              onOpen,
+              setCheckEligibility,
+              toast
             )}
-          </div>
-        </div>
+            disabled={!buttonGuard.allowed}
+            className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200
+              ${buttonGuard.allowed 
+                ? 'bg-black/80 hover:bg-black/60 text-primary border-2 border-primary' 
+                : 'bg-black/80 text-primary/50 border-2 border-primary/50 cursor-not-allowed'}`}
+            title={buttonGuard.reason}
+          >
+            {guardList.find((elem) => elem.label === buttonGuard.label)?.minting ? (
+              <span>MINTING...</span>
+            ) : (
+              "MINT NOW"
+            )}
+          </button>
+        )}
       </div>
     );
   });
