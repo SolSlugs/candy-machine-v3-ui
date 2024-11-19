@@ -146,49 +146,45 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
                 animate={{ 
                   scale: [
                     0.8, // Start
-                    1,   // Initial scale
-                    0.9, // First squish
-                    1.1, // First expand
-                    0.85, // Second squish (1523ms)
+                    1,   // Clean fade in to normal size
+                    0.9,  // First squish (2073ms)
+                    1.1,  // First expand
+                    0.85, // Second squish (2327ms)
                     1.15, // Second expand
-                    0.9,  // Third squish (2073ms)
+                    0.9,  // Third squish (2684ms)
                     1.1,  // Third expand
-                    0.85, // Fourth squish (2327ms)
+                    0.85, // Fourth squish (3047ms)
                     1.15, // Fourth expand
-                    0.9,  // Fifth squish (2684ms)
+                    0.9,  // Fifth squish (3415ms)
                     1.1,  // Fifth expand
-                    0.85, // Sixth squish (3047ms)
+                    0.85, // Sixth squish (3811ms)
                     1.15, // Sixth expand
-                    0.9,  // Seventh squish (3415ms)
-                    1.1,  // Seventh expand
-                    0.85, // Eighth squish (3811ms)
-                    1.15, // Eighth expand
                     1,    // Final position
+                    1,    // Hold
+                    0     // Fade out
                   ],
-                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+                  opacity: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0]
                 }}
                 transition={{
                   duration: 5.181,
                   times: [
                     0,
-                    1523/5181,  // Initial movement
-                    1523/5181,  // First squish
-                    1800/5181,
-                    2073/5181,  // Second squish
+                    2073/5181,  // Clean fade in
+                    2073/5181,  // First squish
                     2200/5181,
-                    2327/5181,  // Third squish
+                    2327/5181,  // Second squish
                     2500/5181,
-                    2684/5181,  // Fourth squish
+                    2684/5181,  // Third squish
                     2800/5181,
-                    3047/5181,  // Fifth squish
+                    3047/5181,  // Fourth squish
                     3200/5181,
-                    3415/5181,  // Sixth squish
+                    3415/5181,  // Fifth squish
                     3600/5181,
-                    3811/5181,  // Seventh squish
+                    3811/5181,  // Sixth squish
                     4000/5181,
-                    4219/5181,  // Eighth squish
-                    4400/5181,
-                    5181/5181,
+                    4800/5181,  // Hold position
+                    5000/5181,  // Start fade
+                    1           // Complete fade
                   ],
                   ease: "easeInOut"
                 }}
@@ -201,7 +197,7 @@ export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
               </motion.div>
 
               {/* Fire particle effects */}
-              {[1523, 2327, 3047, 3811].map((timing) => (
+              {[2327, 3047, 3811].map((timing) => (
                 <motion.div
                   key={timing}
                   className="absolute inset-0 flex items-center justify-center"
