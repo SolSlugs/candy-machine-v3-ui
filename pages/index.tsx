@@ -252,6 +252,7 @@ export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [mintSuccess, setMintSuccess] = useState(false);
   const [dialogText, setDialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
+  const [dialogKey, setDialogKey] = useState('default');
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {

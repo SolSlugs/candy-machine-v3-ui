@@ -102,7 +102,8 @@ const mintClick = async (
   toast: ReturnType<typeof useToast>,
   setMintSuccess: Dispatch<SetStateAction<boolean>>,
   setDialogText: Dispatch<SetStateAction<string>>,
-  mintSuccess: boolean
+  mintSuccess: boolean,
+  setDialogKey: Dispatch<SetStateAction<string>>
 ) => {
   const guardToUse = chooseGuardToUse(guard, candyGuard);
   if (!guardToUse.guards) {
@@ -242,7 +243,15 @@ const mintClick = async (
         });
     });
 
-    await Promise.allSettled(sendPromises);
+    const results =await Promise.allSettled(sendPromises);
+
+    // check if all txs are successful
+    const allSuccessful = results.every((result) => result.status === "fulfilled");
+
+    if (!allSuccessful) {
+      toast.showToast("Minting failed!", "error");
+      return;
+    }
 
     setMintSuccess(true);
     if (mintSuccess) {
@@ -250,11 +259,26 @@ const mintClick = async (
     } else {
       setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
     }
-    
+
     toast.showToast(
       `${signedTransactions.length} Slug Minted!`,
       "success"
     );
+
+    // After successful mint and NFT fetching
+    if (newMintsCreated.length > 0) {
+      setMintsCreated(newMintsCreated);
+      onOpen();
+      setMintSuccess(true);
+      // Use different message if already in success state
+      if (mintSuccess) {
+        setDialogText("You just minted another gen 4. Hell yeah!");
+      } else {
+        setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
+      }
+      // Force dialog animation by updating dialogKey
+      setDialogKey(`mint-${Date.now()}`);
+    }
 
   } catch (e) {
     console.error(`minting failed because of ${e}`);
@@ -301,6 +325,7 @@ type Props = {
   setMintSuccess: Dispatch<SetStateAction<boolean>>;
   setDialogText: Dispatch<SetStateAction<string>>;
   mintSuccess: boolean;
+  setDialogKey: Dispatch<SetStateAction<string>>;
 };
 
 export function ButtonList({
@@ -317,6 +342,7 @@ export function ButtonList({
   setMintSuccess,
   setDialogText,
   mintSuccess,
+  setDialogKey
 }: Props): JSX.Element {
   const solanaTime = useSolanaTime();
   const [numberInputValues, setNumberInputValues] = useState<{
@@ -374,7 +400,8 @@ export function ButtonList({
                 toast,
                 setMintSuccess,
                 setDialogText,
-                mintSuccess
+                mintSuccess,
+                setDialogKey
               )}
               disabled={!buttonGuard.allowed}
               className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200
