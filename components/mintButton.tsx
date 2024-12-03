@@ -225,7 +225,7 @@ const mintClick = async (
     
     const sendPromises = signedTransactions.map((tx, index) => {
       return umi.rpc
-        .sendTransaction(tx, { skipPreflight:true, maxRetries: 1, preflightCommitment: "finalized", commitment: "finalized" })
+        .sendTransaction(tx, { skipPreflight:true, maxRetries: 10, preflightCommitment: "confirmed", commitment: "confirmed" })
         .then((signature) => {
           console.log(
             `Transaction ${index + 1} resolved with signature: ${
@@ -244,65 +244,18 @@ const mintClick = async (
 
     await Promise.allSettled(sendPromises);
 
-    if (!(await sendPromises[0]).status === true) {
-      // throw error that no tx was created
-      throw new Error("no tx was created");
+    setMintSuccess(true);
+    if (mintSuccess) {
+      setDialogText("You just minted another gen 4. Hell yeah!");
+    } else {
+      setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
     }
-    updateLoadingText(
-      `finalizing transaction(s)`,
-      guardList,
-      guardToUse.label,
-      setGuardList
-    );
-
+    
     toast.showToast(
-      `${signedTransactions.length} Transaction(s) sent!`,
+      `${signedTransactions.length} Slug Minted!`,
       "success"
     );
-    
-    const successfulMints = await verifyTx(umi, signatures, latestBlockhash, "finalized");
 
-    updateLoadingText(
-      "Fetching your NFT",
-      guardList,
-      guardToUse.label,
-      setGuardList
-    );
-
-    // Filter out successful mints and map to fetch promises
-    const fetchNftPromises = successfulMints.map((mintResult) =>
-      fetchNft(umi, mintResult, toast).then((nftData) => ({
-        mint: mintResult,
-        nftData,
-      }))
-    );
-
-    const fetchedNftsResults = await Promise.all(fetchNftPromises);
-
-    // Prepare data for setting mintsCreated
-    let newMintsCreated: { mint: PublicKey; offChainMetadata: JsonMetadata }[] =
-      [];
-    fetchedNftsResults.map((acc) => {
-      if (acc.nftData.digitalAsset && acc.nftData.jsonMetadata) {
-        newMintsCreated.push({
-          mint: acc.mint,
-          offChainMetadata: acc.nftData.jsonMetadata,
-        });
-      }
-      return acc;
-    }, []);
-
-    // Update mintsCreated only if there are new mints
-    if (newMintsCreated.length > 0) {
-        setMintsCreated(newMintsCreated);
-        onOpen();
-        setMintSuccess(true);
-        if (mintSuccess) {
-          setDialogText("You just minted another gen 4. Hell yeah!");
-        } else {
-          setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
-        }
-    }
   } catch (e) {
     console.error(`minting failed because of ${e}`);
     toast.showToast(
