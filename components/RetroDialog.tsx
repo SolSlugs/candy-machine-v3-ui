@@ -71,6 +71,15 @@ export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png'
     };
   }, [text, dialogKey]);
 
+  useEffect(() => {
+    // Preload both profile images
+    const images = ['/ts.png', '/wflz.png'];
+    images.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   return (
     <motion.div 
       className="w-full bg-black/80 border-2 border-primary rounded-sm"
@@ -80,12 +89,24 @@ export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png'
     >
       <div className="flex h-24">
         {/* Character Avatar */}
-        <div className="h-full aspect-square flex-shrink-0 p-2">
+        <div className="h-full aspect-square flex-shrink-0 p-2 relative">
           <img 
-            src={avatarSrc}
+            src="/ts.png"
             alt="Character Avatar" 
-            className="h-full w-full object-contain"
-            style={{ imageRendering: 'pixelated' }}
+            className="absolute inset-0 h-full w-full object-contain transition-opacity duration-300"
+            style={{ 
+              imageRendering: 'pixelated',
+              opacity: avatarSrc === '/wflz.png' ? 0 : 1
+            }}
+          />
+          <img 
+            src="/wflz.png"
+            alt="Character Avatar" 
+            className="absolute inset-0 h-full w-full object-contain transition-opacity duration-300"
+            style={{ 
+              imageRendering: 'pixelated',
+              opacity: avatarSrc === '/wflz.png' ? 1 : 0
+            }}
           />
         </div>
 

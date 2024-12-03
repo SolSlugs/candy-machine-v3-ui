@@ -147,14 +147,31 @@ const PageContent = React.memo(({
   const remaining = total - Number(candyMachine?.itemsRedeemed || 0);
   const percentage = ((remaining / total) * 100) || 0;
 
+  useEffect(() => {
+    const images = ['/bloodmoon.png', '/nightshift.png'];
+    images.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   return (
     <div className="flex justify-center items-center min-h-screen p-4">
       <div className="relative w-[512px] h-[512px] overflow-hidden rounded-lg border-4 border-primary">
         <div 
-          className="absolute inset-0 bg-cover bg-center"
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
           style={{ 
-            backgroundImage: `url("${mintSuccess ? '/bloodmoon.png' : '/nightshift.png'}")`,
-            imageRendering: 'pixelated'
+            backgroundImage: `url("/nightshift.png")`,
+            imageRendering: 'pixelated',
+            opacity: mintSuccess ? 0 : 1
+          }}
+        />
+        <div 
+          className="absolute inset-0 bg-cover bg-center transition-opacity duration-300"
+          style={{ 
+            backgroundImage: `url("/bloodmoon.png")`,
+            imageRendering: 'pixelated',
+            opacity: mintSuccess ? 1 : 0
           }}
         />
         
