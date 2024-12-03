@@ -122,6 +122,8 @@ const PageContent = React.memo(({
   mintSuccess,
   setMintSuccess,
   setDialogText,
+  setDialogKey,
+  dialogKey,
 }: {
   loading: boolean;
   candyMachine: CandyMachine | undefined;
@@ -138,6 +140,8 @@ const PageContent = React.memo(({
   mintSuccess: boolean;
   setMintSuccess: Dispatch<SetStateAction<boolean>>;
   setDialogText: Dispatch<SetStateAction<string>>;
+  setDialogKey: Dispatch<SetStateAction<number>>;
+  dialogKey: number;
 }) => {
   const total = Number(candyMachine?.data.itemsAvailable) || 0;
   const remaining = total - Number(candyMachine?.itemsRedeemed || 0);
@@ -214,6 +218,7 @@ const PageContent = React.memo(({
                   setMintSuccess={setMintSuccess}
                   setDialogText={setDialogText}
                   mintSuccess={mintSuccess}
+                  setDialogKey={setDialogKey}
                 />
               )}
             </div>
@@ -224,6 +229,7 @@ const PageContent = React.memo(({
               text={dialogText}
               dialogKey="main-dialog"
               avatarSrc={mintSuccess ? "/wflz.png" : undefined}
+              key={dialogKey}
             />
           </div>
         </div>
@@ -252,7 +258,7 @@ export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [mintSuccess, setMintSuccess] = useState(false);
   const [dialogText, setDialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
-  const [dialogKey, setDialogKey] = useState('default');
+  const [dialogKey, setDialogKey] = useState(0);
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
@@ -346,6 +352,8 @@ export default function Home() {
             mintSuccess={mintSuccess}
             setMintSuccess={setMintSuccess}
             setDialogText={setDialogText}
+            setDialogKey={setDialogKey}
+            dialogKey={dialogKey}
           />
 
           {/* Initializer Modal */}
