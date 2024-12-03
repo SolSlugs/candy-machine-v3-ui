@@ -101,7 +101,8 @@ const mintClick = async (
   setCheckEligibility: Dispatch<SetStateAction<boolean>>,
   toast: ReturnType<typeof useToast>,
   setMintSuccess: Dispatch<SetStateAction<boolean>>,
-  setDialogText: Dispatch<SetStateAction<string>>
+  setDialogText: Dispatch<SetStateAction<string>>,
+  mintSuccess: boolean
 ) => {
   const guardToUse = chooseGuardToUse(guard, candyGuard);
   if (!guardToUse.guards) {
@@ -296,7 +297,11 @@ const mintClick = async (
         setMintsCreated(newMintsCreated);
         onOpen();
         setMintSuccess(true);
-        setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
+        if (mintSuccess) {
+          setDialogText("You just minted another gen 4. Hell yeah!");
+        } else {
+          setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
+        }
     }
   } catch (e) {
     console.error(`minting failed because of ${e}`);
@@ -342,6 +347,7 @@ type Props = {
   setCheckEligibility: Dispatch<SetStateAction<boolean>>;
   setMintSuccess: Dispatch<SetStateAction<boolean>>;
   setDialogText: Dispatch<SetStateAction<string>>;
+  mintSuccess: boolean;
 };
 
 export function ButtonList({
@@ -357,6 +363,7 @@ export function ButtonList({
   setCheckEligibility,
   setMintSuccess,
   setDialogText,
+  mintSuccess,
 }: Props): JSX.Element {
   const solanaTime = useSolanaTime();
   const [numberInputValues, setNumberInputValues] = useState<{
@@ -413,7 +420,8 @@ export function ButtonList({
                 setCheckEligibility,
                 toast,
                 setMintSuccess,
-                setDialogText
+                setDialogText,
+                mintSuccess
               )}
               disabled={!buttonGuard.allowed}
               className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200

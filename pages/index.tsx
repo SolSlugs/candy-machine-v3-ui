@@ -213,6 +213,7 @@ const PageContent = React.memo(({
                   setCheckEligibility={setCheckEligibility}
                   setMintSuccess={setMintSuccess}
                   setDialogText={setDialogText}
+                  mintSuccess={mintSuccess}
                 />
               )}
             </div>
@@ -345,27 +346,6 @@ export default function Home() {
             setMintSuccess={setMintSuccess}
             setDialogText={setDialogText}
           />
-
-          {/* Replay Intro Button */}
-          <div className="fixed bottom-4 right-4">
-            <button
-              onClick={() => setShowIntro(true)}
-              className="bg-widget hover:bg-accent text-primary px-4 py-2 rounded-lg shadow-lg transition-colors duration-200 font-press-start text-sm"
-            >
-              Replay Intro
-            </button>
-          </div>
-
-          {/* NFT Display Modal */}
-          <Modal 
-            isOpen={isShowNftOpen} 
-            onClose={onShowNftClose}
-          >
-            <div className="mb-4">
-              <h2 className="text-lg font-medium text-primary">Your minted NFT:</h2>
-            </div>
-            <ShowNft nfts={mintsCreated} />
-          </Modal>
 
           {/* Initializer Modal */}
           {umi.identity.publicKey === candyMachine?.authority && (

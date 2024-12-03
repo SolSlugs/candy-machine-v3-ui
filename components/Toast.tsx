@@ -29,9 +29,9 @@ export const Toast: React.FC<ToastProps> = ({ message, type, description, onClos
       initial={{ opacity: 0, y: 50, scale: 0.3 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 
+      className={`fixed bottom-4 right-4 z-50 
         bg-black/90 border-2 rounded-sm px-4 py-3 
-        font-press-start text-xs max-w-sm w-full
+        font-press-start text-xs max-w-sm w-auto
         ${getTypeStyles()}`}
     >
       <div className="flex gap-3">
