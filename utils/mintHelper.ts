@@ -361,18 +361,8 @@ export const buildTx = (
       tokenStandard: candyMachine.tokenStandard,
     })
   );
-  if (buyBeer) {
-    tx = tx.prepend(
-      transferSol(umi, {
-        destination: publicKey(
-          "BeeryDvghgcKPTUw3N3bdFDFFWhTWdWHnsLuVebgsGSD"
-        ),
-        amount: sol(Number(0.005)),
-      })
-    );
-  }
   tx = tx.prepend(setComputeUnitLimit(umi, { units }));
-  tx = tx.prepend(setComputeUnitPrice(umi, { microLamports: parseInt(process.env.NEXT_PUBLIC_MICROLAMPORTS ?? "1001") }));
+  tx = tx.prepend(setComputeUnitPrice(umi, { microLamports: BigInt(100001) }));
   tx = tx.setAddressLookupTables(luts);
   tx = tx.setBlockhash(latestBlockhash);
   return tx.build(umi);

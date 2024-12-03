@@ -98,7 +98,7 @@ const useCandyMachine = (
         }
       }
     })();
-  }, [umi, checkEligibility]);
+  }, [umi, checkEligibility, candyMachineId, firstRun, toast, setfirstRun]);
 
   return { candyMachine, candyGuard };
 
@@ -118,7 +118,10 @@ const PageContent = React.memo(({
   onShowNftOpen,
   setCheckEligibility,
   umi,
-  candyGuard
+  candyGuard,
+  mintSuccess,
+  setMintSuccess,
+  setDialogText,
 }: {
   loading: boolean;
   candyMachine: CandyMachine | undefined;
@@ -132,6 +135,9 @@ const PageContent = React.memo(({
   setCheckEligibility: Dispatch<SetStateAction<boolean>>;
   umi: Umi;
   candyGuard: CandyGuard | undefined;
+  mintSuccess: boolean;
+  setMintSuccess: Dispatch<SetStateAction<boolean>>;
+  setDialogText: Dispatch<SetStateAction<string>>;
 }) => {
   const total = Number(candyMachine?.data.itemsAvailable) || 0;
   const remaining = total - Number(candyMachine?.itemsRedeemed || 0);
@@ -143,7 +149,7 @@ const PageContent = React.memo(({
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
-            backgroundImage: 'url("/nightshift.png")',
+            backgroundImage: `url("${mintSuccess ? '/bloodmoon.png' : '/nightshift.png'}")`,
             imageRendering: 'pixelated'
           }}
         />
@@ -205,6 +211,8 @@ const PageContent = React.memo(({
                   setMintsCreated={setMintsCreated}
                   onOpen={onShowNftOpen}
                   setCheckEligibility={setCheckEligibility}
+                  setMintSuccess={setMintSuccess}
+                  setDialogText={setDialogText}
                 />
               )}
             </div>
@@ -214,6 +222,7 @@ const PageContent = React.memo(({
             <RetroDialog 
               text={dialogText}
               dialogKey="main-dialog"
+              avatarSrc={mintSuccess ? "/wflz.png" : undefined}
             />
           </div>
         </div>
@@ -240,7 +249,8 @@ export default function Home() {
   const [firstRun, setFirstRun] = useState(true);
   const [checkEligibility, setCheckEligibility] = useState<boolean>(true);
   const [showIntro, setShowIntro] = useState(true);
-  const [dialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
+  const [mintSuccess, setMintSuccess] = useState(false);
+  const [dialogText, setDialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
@@ -331,6 +341,9 @@ export default function Home() {
             setCheckEligibility={setCheckEligibility}
             umi={umi}
             candyGuard={candyGuard}
+            mintSuccess={mintSuccess}
+            setMintSuccess={setMintSuccess}
+            setDialogText={setDialogText}
           />
 
           {/* Replay Intro Button */}

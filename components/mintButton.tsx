@@ -99,7 +99,9 @@ const mintClick = async (
   setGuardList: Dispatch<SetStateAction<GuardReturn[]>>,
   onOpen: () => void,
   setCheckEligibility: Dispatch<SetStateAction<boolean>>,
-  toast: ReturnType<typeof useToast>
+  toast: ReturnType<typeof useToast>,
+  setMintSuccess: Dispatch<SetStateAction<boolean>>,
+  setDialogText: Dispatch<SetStateAction<string>>
 ) => {
   const guardToUse = chooseGuardToUse(guard, candyGuard);
   if (!guardToUse.guards) {
@@ -293,6 +295,8 @@ const mintClick = async (
     if (newMintsCreated.length > 0) {
         setMintsCreated(newMintsCreated);
         onOpen();
+        setMintSuccess(true);
+        setDialogText("Congratulations! Your mint was successful. Welcome to gen 4 brother.");
     }
   } catch (e) {
     console.error(`minting failed because of ${e}`);
@@ -336,6 +340,8 @@ type Props = {
   >;
   onOpen: () => void;
   setCheckEligibility: Dispatch<SetStateAction<boolean>>;
+  setMintSuccess: Dispatch<SetStateAction<boolean>>;
+  setDialogText: Dispatch<SetStateAction<string>>;
 };
 
 export function ButtonList({
@@ -349,6 +355,8 @@ export function ButtonList({
   setMintsCreated,
   onOpen,
   setCheckEligibility,
+  setMintSuccess,
+  setDialogText,
 }: Props): JSX.Element {
   const solanaTime = useSolanaTime();
   const [numberInputValues, setNumberInputValues] = useState<{
@@ -403,7 +411,9 @@ export function ButtonList({
                 setGuardList,
                 onOpen,
                 setCheckEligibility,
-                toast
+                toast,
+                setMintSuccess,
+                setDialogText
               )}
               disabled={!buttonGuard.allowed}
               className={`w-full font-press-start text-xs px-4 py-2 rounded-sm transition-colors duration-200
@@ -421,7 +431,7 @@ export function ButtonList({
             
             {/* Error Message */}
             {!buttonGuard.allowed && isWalletConnected && (
-              <div className="font-press-start text-[10px] text-primary/70 text-center px-2">
+              <div className="font-press-start text-[10px] text-incinerator/70 text-center px-2">
                 No mint tokens found in wallet
               </div>
             )}

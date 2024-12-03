@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 interface RetroDialogProps {
   text: string;
   dialogKey?: string;
+  avatarSrc?: string;
 }
 
-export const RetroDialog = ({ text, dialogKey = 'default' }: RetroDialogProps) => {
+export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png' }: RetroDialogProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -81,7 +82,7 @@ export const RetroDialog = ({ text, dialogKey = 'default' }: RetroDialogProps) =
         {/* Character Avatar */}
         <div className="h-full aspect-square flex-shrink-0 p-2">
           <img 
-            src="/ts.png" 
+            src={avatarSrc}
             alt="Character Avatar" 
             className="h-full w-full object-contain"
             style={{ imageRendering: 'pixelated' }}
