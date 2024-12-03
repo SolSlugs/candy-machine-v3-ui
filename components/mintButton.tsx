@@ -277,7 +277,6 @@ const mintClick = async (
       "error"
     );
   } finally {
-    //find the guard by guardToUse.label and set minting to true
     const guardIndex = guardList.findIndex((g) => g.label === guardToUse.label);
     if (guardIndex === -1) {
       console.error("guard not found");
@@ -286,7 +285,12 @@ const mintClick = async (
     const newGuardList = [...guardList];
     newGuardList[guardIndex].minting = false;
     setGuardList(newGuardList);
-    setCheckEligibility(true);
+    
+    // Add delay before checking eligibility to ensure blockchain state is updated
+    setTimeout(() => {
+      setCheckEligibility(true);
+    }, 1000);
+    
     updateLoadingText(undefined, guardList, guardToUse.label, setGuardList);
   }
 };

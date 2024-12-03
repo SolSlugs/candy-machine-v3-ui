@@ -5,7 +5,7 @@ import {
 } from "@metaplex-foundation/umi";
 import { DigitalAssetWithToken, JsonMetadata } from "@metaplex-foundation/mpl-token-metadata";
 import dynamic from "next/dynamic";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState, useRef } from "react";
 import React from 'react';
 import { useUmi } from "../utils/useUmi";
 import { fetchCandyMachine, safeFetchCandyGuard, CandyGuard, CandyMachine, AccountVersion } from "@metaplex-foundation/mpl-candy-machine"
@@ -277,6 +277,55 @@ export default function Home() {
   const [dialogText, setDialogText] = useState("What's up?! You've reached the Sol Slugs Gen 4 mint. If you have a mint token, you can redeem it here for a badass gen 4 slug! The slugussy provides the liquidity so we're good to go.");
   const [dialogKey, setDialogKey] = useState(0);
 
+  // Add polling interval ref to clean up properly
+  const pollInterval = useRef<NodeJS.Timeout>();
+
+  // Add ref for temporary faster polling
+  const fastPollInterval = useRef<NodeJS.Timeout>();
+
+  // Add function to handle eligibility checks with retries
+  const checkEligibilityWithRetries = async (retries = 5, delay = 1000) => {
+    if (!candyMachine || !candyGuard) return;
+    
+    const attempt = async () => {
+      const { guardReturn, ownedTokens } = await guardChecker(
+        umi, candyGuard, candyMachine, solanaTime
+      );
+
+      // Check if the items redeemed has actually updated
+      const currentRedeemed = Number(candyMachine.itemsRedeemed);
+      
+      setOwnedTokens(ownedTokens);
+      setGuards(guardReturn);
+      
+      let allowed = false;
+      for (const guard of guardReturn) {
+        if (guard.allowed) {
+          allowed = true;
+          break;
+        }
+      }
+      setIsAllowed(allowed);
+      setLoading(false);
+      
+      return currentRedeemed;
+    };
+
+    let lastRedeemed = Number(candyMachine.itemsRedeemed);
+    
+    for (let i = 0; i < retries; i++) {
+      const currentRedeemed = await attempt();
+      if (currentRedeemed !== lastRedeemed) {
+        // State has updated, we can stop retrying
+        break;
+      }
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      lastRedeemed = currentRedeemed;
+    }
+  };
+
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_CANDY_MACHINE_ID) {
       toast.showToast(
@@ -311,37 +360,56 @@ export default function Home() {
     setFirstRun
   );
 
+  // Modify the mint success effect to use the retry mechanism and temporary faster polling
   useEffect(() => {
-    const checkEligibilityFunc = async () => {
-      if (!candyMachine || !candyGuard || !checkEligibility || isShowNftOpen) {
+    if (mintSuccess) {
+      // Clear any existing fast poll interval
+      if (fastPollInterval.current) {
+        clearInterval(fastPollInterval.current);
+      }
+
+      // Initial check with retries
+      checkEligibilityWithRetries();
+
+      // Set up temporary faster polling (every 1 second) for 15 seconds
+      fastPollInterval.current = setInterval(() => {
+        checkEligibilityWithRetries(2, 500);
+      }, 1000);
+
+      // Clear the faster polling after 15 seconds
+      setTimeout(() => {
+        if (fastPollInterval.current) {
+          clearInterval(fastPollInterval.current);
+        }
+      }, 15000);
+    }
+  }, [mintSuccess]);
+
+  // Modify the main polling effect
+  useEffect(() => {
+    const regularCheck = async () => {
+      if (!candyMachine || !candyGuard || isShowNftOpen) {
         return;
       }
-      setFirstRun(false);
       
-      const { guardReturn, ownedTokens } = await guardChecker(
-        umi, candyGuard, candyMachine, solanaTime
-      );
-
-      setOwnedTokens(ownedTokens);
-      setGuards(guardReturn);
-      setIsAllowed(false);
-
-      let allowed = false;
-      for (const guard of guardReturn) {
-        if (guard.allowed) {
-          allowed = true;
-          break;
-        }
-      }
-
-      setIsAllowed(allowed);
-      setLoading(false);
+      await checkEligibilityWithRetries(1, 0);
     };
 
-    checkEligibilityFunc();
-    // On purpose: not check for candyMachine, candyGuard, solanaTime
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [umi, checkEligibility, firstRun]);
+    // Initial check
+    regularCheck();
+
+    // Set up regular polling (every 5 seconds)
+    pollInterval.current = setInterval(regularCheck, 5000);
+
+    return () => {
+      if (pollInterval.current) {
+        clearInterval(pollInterval.current);
+      }
+      if (fastPollInterval.current) {
+        clearInterval(fastPollInterval.current);
+      }
+    };
+  }, [umi, candyMachine, candyGuard, solanaTime, isShowNftOpen]);
 
   return (
     <main className="min-h-screen bg-background">
