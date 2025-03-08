@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface RetroIntroProps {
   onIntroComplete: () => void;
@@ -45,38 +46,65 @@ const Particle = ({ delay }: { delay: number }) => {
 };
 
 export const RetroIntro = ({ onIntroComplete }: RetroIntroProps) => {
+  const { isMuted } = useAudio();
   const [stage, setStage] = useState<'start' | 'solslugs' | 'incinerator' | 'complete'>('start');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const incineratorAudioRef = useRef<HTMLAudioElement | null>(null);
+  const startTimeRef = useRef<number>(0);
+  const stageStartTimeRef = useRef<number>(0);
 
   const handleInitialClick = () => {
     setStage('solslugs');
-    audioRef.current = new Audio('/ss.ogg');
-    audioRef.current.play().catch(console.error);
+    stageStartTimeRef.current = Date.now();
+    
+    if (!isMuted) {
+      audioRef.current = new Audio('/ss.ogg');
+      audioRef.current.play().catch(console.error);
+    }
 
-    // Schedule the transition to incinerator stage with longer buffer
     setTimeout(() => {
       setStage('incinerator');
-      incineratorAudioRef.current = new Audio('/dkc.ogg');
-      incineratorAudioRef.current.play().catch(console.error);
+      stageStartTimeRef.current = Date.now();
+      
+      if (!isMuted) {
+        incineratorAudioRef.current = new Audio('/dkc.ogg');
+        incineratorAudioRef.current.play().catch(console.error);
+      }
 
-      // Schedule the final transition
       setTimeout(() => {
         setStage('complete');
         setTimeout(onIntroComplete, 300);
-      }, 5442); // Length of dkc.ogg
-    }, 1772); // Length of ss.ogg + 600ms buffer (increased from 300ms)
+      }, 5442);
+    }, 1772);
   };
 
+  // Add effect to handle mute state changes
+  useEffect(() => {
+    if (isMuted) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      if (incineratorAudioRef.current) {
+        incineratorAudioRef.current.pause();
+      }
+    } else {
+      // Resume audio if we're in the appropriate stage
+      if (stage === 'solslugs' && audioRef.current) {
+        audioRef.current.play().catch(console.error);
+      } else if (stage === 'incinerator' && incineratorAudioRef.current) {
+        incineratorAudioRef.current.play().catch(console.error);
+      }
+    }
+  }, [isMuted, stage]);
+
+  // Cleanup effect
   useEffect(() => {
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
-        audioRef.current.currentTime = 0;
       }
       if (incineratorAudioRef.current) {
         incineratorAudioRef.current.pause();
-        incineratorAudioRef.current.currentTime = 0;
       }
     };
   }, []);

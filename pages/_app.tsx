@@ -10,6 +10,8 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 import { headerText } from 'settings';
 import { SolanaTimeProvider } from "@/utils/SolanaTimeContext";
 import { ToastProvider } from '@/contexts/ToastContext';
+import { AudioProvider } from '../contexts/AudioContext';
+import { MuteButton } from '../components/MuteButton';
 
 export default function App({ Component, pageProps }: AppProps) {
   let network = WalletAdapterNetwork.Devnet;
@@ -38,13 +40,16 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <WalletProvider wallets={wallets}>
         <UmiProvider endpoint={endpoint}>
-          <WalletModalProvider>
-            <SolanaTimeProvider>
-              <ToastProvider>
-                <Component {...pageProps} />
-              </ToastProvider>
-            </SolanaTimeProvider>
-          </WalletModalProvider>
+          <AudioProvider>
+            <WalletModalProvider>
+              <SolanaTimeProvider>
+                <ToastProvider>
+                  <MuteButton />
+                  <Component {...pageProps} />
+                </ToastProvider>
+              </SolanaTimeProvider>
+            </WalletModalProvider>
+          </AudioProvider>
         </UmiProvider>
       </WalletProvider>
     </>

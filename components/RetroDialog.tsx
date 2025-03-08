@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
+import { useAudio } from '@/contexts/AudioContext';
 
 interface RetroDialogProps {
   text: string;
@@ -8,6 +9,7 @@ interface RetroDialogProps {
 }
 
 export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png' }: RetroDialogProps) => {
+  const { isMuted } = useAudio();
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -17,9 +19,11 @@ export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png'
   const textSpeed = 50;
 
   useEffect(() => {
-    audioRef.current = new Audio('/textdialog.ogg');
-    audioRef.current.volume = 0.3;
-  }, []);
+    if (!isMuted) {
+      audioRef.current = new Audio('/textdialog.ogg');
+      audioRef.current.volume = 0.3;
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     if (isTypingRef.current) return;
@@ -31,7 +35,7 @@ export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png'
       if (currentIndex <= text.length) {
         setDisplayedText(text.slice(0, currentIndex));
         
-        if (audioRef.current && currentIndex < text.length) {
+        if (audioRef.current && !isMuted && currentIndex < text.length) {
           audioRef.current.currentTime = 0;
           audioRef.current.play().catch(console.error);
         }
@@ -69,7 +73,7 @@ export const RetroDialog = ({ text, dialogKey = 'default', avatarSrc = '/ts.png'
       }
       isTypingRef.current = false;
     };
-  }, [text, dialogKey]);
+  }, [text, dialogKey, isMuted]);
 
   useEffect(() => {
     // Preload both profile images
