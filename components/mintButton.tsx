@@ -357,14 +357,6 @@ export function ButtonList({
     'date' in startDate.value ? 
     startDate.value.date : null;
   
-  console.log("Start date guard:", {
-    startDate,
-    startTime: startTime?.toString(),
-    guardTypes: Object.keys(candyGuard.guards),
-    optionType: startDate?.__option,
-    value: startDate?.value
-  });
-
   if (startTime && solanaTime && startTime > solanaTime) {
     console.log("Should show timer:", {
       startTime: startTime.toString(),
