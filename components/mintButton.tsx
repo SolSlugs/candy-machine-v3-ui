@@ -345,7 +345,52 @@ export function ButtonList({
   const toast = useToast();
 
   if (!candyMachine || !candyGuard) {
+    console.log("No candyMachine or candyGuard");
     return <></>;
+  }
+
+  // Update the start time check to properly handle the nested Option type
+  const startDate = candyGuard.guards.startDate;
+  const startTime = startDate && 
+    startDate.__option === "Some" && 
+    startDate.value && 
+    'date' in startDate.value ? 
+    startDate.value.date : null;
+  
+  console.log("Start date guard:", {
+    startDate,
+    startTime: startTime?.toString(),
+    guardTypes: Object.keys(candyGuard.guards),
+    optionType: startDate?.__option,
+    value: startDate?.value
+  });
+
+  if (startTime && solanaTime && startTime > solanaTime) {
+    console.log("Should show timer:", {
+      startTime: startTime.toString(),
+      solanaTime: solanaTime.toString(),
+      difference: (startTime - solanaTime).toString()
+    });
+    return (
+      <div className="w-full space-y-2">
+        <div className="font-press-start text-xs text-primary text-center">
+          MINT STARTS IN:
+        </div>
+        <Timer 
+          toTime={startTime} 
+          solanaTime={solanaTime} 
+          setCheckEligibility={setCheckEligibility} 
+        />
+      </div>
+    );
+  } else {
+    console.log("Not showing timer because:", {
+      hasStartTime: !!startTime,
+      hasSolanaTime: !!solanaTime,
+      startTimeValue: startTime?.toString(),
+      solanaTimeValue: solanaTime?.toString(),
+      isStartTimeGreater: startTime && solanaTime ? startTime > solanaTime : "N/A"
+    });
   }
 
   const isWalletConnected = umi.identity.publicKey !== publicKey("11111111111111111111111111111111");
