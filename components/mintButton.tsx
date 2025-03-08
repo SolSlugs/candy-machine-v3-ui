@@ -364,7 +364,7 @@ export function ButtonList({
       difference: (startTime - solanaTime).toString()
     });
     return (
-      <div className="w-full space-y-2">
+      <div className="w-full space-y-2 py-1">
         <div className="font-press-start text-xs text-primary text-center">
           MINT STARTS IN:
         </div>
