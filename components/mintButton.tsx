@@ -414,7 +414,7 @@ export function ButtonList({
             {/* Error Message */}
             {!buttonGuard.allowed && isWalletConnected && (
               <div className="font-press-start text-[10px] text-incinerator/70 text-center px-2">
-                No mint tokens found in wallet
+                {buttonGuard.reason}
               </div>
             )}
           </>
